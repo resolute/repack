@@ -1,0 +1,4 @@
+*.js.map
+/coverage
+/src
+/test

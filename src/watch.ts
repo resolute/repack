@@ -1,0 +1,80 @@
+import { Watcher } from './types';
+
+import path = require('path');
+import sane = require('sane');
+import marko = require('./marko');
+
+// const unique = (val, index, arr) => arr.indexOf(val) === index;
+// const flatten = (acc, val) => acc.concat(val);
+
+let watcher: Watcher;
+
+/**
+ * debounce: Returns a function, that, as long as it continues to be
+ * invoked (.), will not be triggered (*).  The function will be called
+ * after it stops being called for `threshold` milliseconds.  If
+ * `immediate` is passed, trigger the function on the leading edge,
+ * instead of the trailing.
+ *
+ *       /-- 10s --\ /-- 10s --\ /-- 10s --\
+ *     (*). . . . . . . . . . . .           *
+ *
+ * @param   function    fn          Function to be throttled
+ * @param   number      threshold   Milliseconds fn will be throttled
+ *
+ * @return  function    Debounce'd function `fn`
+ */
+
+const debounceAndAggregate = (fn: Function, threshold?: number) => {
+  let timeout;
+  let aggregateArgs: any[] = [];
+
+  return (...args: any) => {
+    aggregateArgs.push(args);
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      timeout = null;
+      fn.call(undefined, aggregateArgs);
+      aggregateArgs = [];
+    }, threshold);
+  };
+};
+
+const watch = (asset) => {
+  // TODO dynamic config
+  if (watcher) {
+    return watcher;
+  }
+
+  const run = debounceAndAggregate((paths) => {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [relative, cwd] of paths) {
+      if (/\.marko/.test(relative)) {
+        marko.delete(path.join(cwd, relative));
+      } else if (/\.(?:svg|s?css)$/.test(relative)) {
+        Object.keys(asset.all()).filter((filename) => /\.s?css/.test(filename)).forEach((filename) => {
+          asset.delete(filename);
+        });
+      } else if (/\.[jt]s$/.test(relative)) {
+        Object.keys(asset.all()).filter((filename) => /\.[jt]s]/.test(filename)).forEach((filename) => {
+          asset.delete(filename);
+        });
+      }
+      asset.delete(relative);
+    }
+    asset.run();
+  }, 16);
+
+  watcher = sane(process.cwd(), { ignored: [/node_modules/, /web\/s\//, /web\/html\//, /\.marko\.js$/] })
+    .on('change', run)
+    .on('add', run)
+    .on('delete', run);
+
+  return watcher;
+};
+
+export = watch;

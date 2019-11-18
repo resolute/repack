@@ -1,0 +1,153 @@
+{
+  "name": "@resolute/repack",
+  "version": "0.0.0",
+  "description": "Build process",
+  "bin": {
+    "repack": "bin/repack"
+  },
+  "main": "./",
+  "types": "./",
+  "files": [
+    "*.js",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "build": "npm run clean && npx tsc && npx prettier --write *.js *.d.ts && (npx eslint --fix *.js > /dev/null 2>&1; true)",
+    "release": "npx np",
+    "prepublishOnly": "npm test && npm run build",
+    "clean": "npx del-cli *.js *.js.map *.d.ts",
+    "test": "echo TODO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/resolute/repack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/resolute/repack/issues"
+  },
+  "homepage": "https://github.com/resolute/repack",
+  "author": "Resolute Digital",
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "dependencies": {
+    "@babel/core": "*",
+    "@babel/polyfill": "*",
+    "@babel/preset-env": "*",
+    "autoprefixer": "*",
+    "b64u": "*",
+    "builtin-modules": "*",
+    "core-js": "*",
+    "css-mqpacker": "*",
+    "esm": "*",
+    "fast-glob": "*",
+    "got": "*",
+    "htmlmin": "*",
+    "imagemin": "*",
+    "imagemin-jpegtran": "*",
+    "imagemin-mozjpeg": "*",
+    "imagemin-pngquant": "*",
+    "imagemin-webp": "*",
+    "juice": "*",
+    "marked": "*",
+    "marko": "*",
+    "micromatch": "*",
+    "node-sass": "*",
+    "postcss": "*",
+    "postcss-sorting": "*",
+    "probe-image-size": "*",
+    "rollup": "*",
+    "rollup-plugin-babel": "*",
+    "rollup-plugin-commonjs": "*",
+    "rollup-plugin-json": "*",
+    "rollup-plugin-node-resolve": "*",
+    "rollup-plugin-sourcemaps": "*",
+    "rollup-plugin-typescript": "*",
+    "sane": "*",
+    "sharp": "*",
+    "svgo": "*",
+    "terser": "*",
+    "ts-node": "*",
+    "tslib": "*",
+    "typescript": "*",
+    "xxhash": "*"
+  },
+  "devDependencies": {
+    "@types/autoprefixer": "*",
+    "@types/got": "*",
+    "@types/imagemin": "*",
+    "@types/imagemin-jpegtran": "*",
+    "@types/imagemin-mozjpeg": "*",
+    "@types/imagemin-pngquant": "*",
+    "@types/imagemin-webp": "*",
+    "@types/marko": "*",
+    "@types/micromatch": "*",
+    "@types/node": "*",
+    "@types/node-sass": "*",
+    "@types/rollup-plugin-json": "*",
+    "@types/sane": "*",
+    "@types/sharp": "*",
+    "@types/svgo": "*",
+    "@typescript-eslint/eslint-plugin": "*",
+    "@typescript-eslint/parser": "*",
+    "eslint": "*",
+    "eslint-config-airbnb-base": "*",
+    "eslint-plugin-import": "*",
+    "np": "*"
+  },
+  "keywords": [
+    "static site generator",
+    "build tool",
+    "minify"
+  ],
+  "prettier": {
+    "endOfLine": "lf",
+    "singleQuote": true
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "eslintConfig": {
+    "env": {
+      "commonjs": true,
+      "es6": true,
+      "node": true
+    },
+    "extends": [
+      "airbnb-base"
+    ],
+    "globals": {
+      "Atomics": "readonly",
+      "SharedArrayBuffer": "readonly"
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2018
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "implicit-arrow-linebreak": "off",
+      "import/no-unresolved": "off",
+      "lines-between-class-members": "off",
+      "no-bitwise": "off",
+      "no-plusplus": "off",
+      "no-shadow": "off",
+      "no-unused-vars": "off",
+      "no-use-before-define": "off",
+      "operator-linebreak": "off",
+      "spaced-comment": [
+        "error",
+        "always",
+        {
+          "exceptions": [
+            "-",
+            "+"
+          ]
+        }
+      ]
+    }
+  },
+  "license": "ISC"
+}
