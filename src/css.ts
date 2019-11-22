@@ -17,7 +17,7 @@ const autoprefixer = require('autoprefixer');
 const postcss = require('postcss');
 const postcssSorting = require('postcss-sorting');
 const cssMqpacker = require('css-mqpacker');
-const sass = require('node-sass');
+const sass = require('sass');
 
 const sassRender = util.promisify(sass.render);
 
@@ -74,7 +74,7 @@ const css = (asset) => async (input) => {
     ])
       .process(css, { from: undefined }))
     // remove any left over newlines
-    .then(({ css }) => css.replace(/\n/g, ''))
+    .then(({ css }) => css.toString().replace(/\n/g, ''))
     .then((data) => ({ ...input, data }));
 };
 export = css;

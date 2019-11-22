@@ -1,7 +1,7 @@
 {
   "name": "@resolute/repack",
   "version": "0.0.0",
-  "description": "Build process",
+  "description": "Static site generator with asset optimization and versioning.",
   "bin": {
     "repack": "bin/repack"
   },
@@ -52,7 +52,7 @@
     "marked": "*",
     "marko": "*",
     "micromatch": "*",
-    "node-sass": "*",
+    "sass": "*",
     "postcss": "*",
     "postcss-sorting": "*",
     "probe-image-size": "*",
@@ -83,7 +83,7 @@
     "@types/marko": "*",
     "@types/micromatch": "*",
     "@types/node": "*",
-    "@types/node-sass": "*",
+    "@types/sass": "*",
     "@types/rollup-plugin-json": "*",
     "@types/sane": "*",
     "@types/sharp": "*",

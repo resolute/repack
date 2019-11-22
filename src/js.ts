@@ -44,9 +44,11 @@ const js = (asset) => async (input, variant) => { // => async (legacy = false) =
       ...(legacy ? [
         babel({
           presets: [
-            ['@babel/env', {
+            ['@babel/preset-env', {
               modules: false,
               targets: { browsers: ['IE 11'] },
+              useBuiltIns: 'usage',
+              corejs: 3,
               // useBuiltIns: 'usage', // 7beta not working properly
               // debug: true
             }],

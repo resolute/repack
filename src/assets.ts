@@ -7,6 +7,7 @@ import glob = require('fast-glob');
 import Version = require('./version');
 
 const { readFile, writeFile } = fs.promises;
+
 const database: { [filename: string]: { [variant: string]: Promise<Version> } } = {};
 const destDir = 'web/s';
 const destUri = '/s';
@@ -74,9 +75,11 @@ const match = (needle: string) => (haystack) => {
 };
 
 const assets = ({ handlers, src }) => {
-  const lookup = async (filename: string, variant = 'generic') => {
-    // console.debug(`get: ${filename}`);
-    const srcSettled = await glob(src);
+  // console.debug('NEW asset database instance!!!');
+  const sourceGlob = glob(src);
+  const repack = async (filename: string, variant = 'generic') => {
+    // console.debug(`repack: ${filename}`);
+    const srcSettled = await sourceGlob;
     const localFile = srcSettled.find(match(filename));
     const normalizedFilename = localFile || filename;
     const variantSlug = typeof variant === 'string' ? variant : JSON.stringify(variant);
@@ -86,11 +89,13 @@ const assets = ({ handlers, src }) => {
     //   return found;
     // }
     if (database[normalizedFilename] && database[normalizedFilename][variantSlug]) {
+      // console.debug(`repack: HIT: ${filename}`);
       return database[normalizedFilename][variantSlug];
     }
     if (!database[normalizedFilename]) {
       database[normalizedFilename] = {};
     }
+    // console.debug(`repack: MISS: ${filename}`);
     database[normalizedFilename][variantSlug] = (async () => {
       let data: Buffer | string | undefined;
       let ext: string = extMap(path.parse(filename).ext);
@@ -103,8 +108,8 @@ const assets = ({ handlers, src }) => {
         .filter(([extensions]) => extensions.indexOf(ext) !== -1)
         .map(([, handler]) => handler);
       if (handler) {
-        // console.debug(`${filename} ${handler.name}`);
-        return new Version(await handler(lookup)({
+        // console.debug(`repack: ${filename} handler: ${handler.name}`);
+        return new Version(await handler(repack)({
           filename: normalizedFilename,
           ext,
           data,
@@ -123,7 +128,7 @@ const assets = ({ handlers, src }) => {
     })();
     return database[normalizedFilename][variantSlug];
   };
-  lookup.delete = async (filename: string) => {
+  repack.delete = async (filename: string) => {
     // console.debug(`del requested: ${filename}`);
     const srcSettled = await glob(src);
     const localFile = srcSettled.find(match(filename));
@@ -133,8 +138,8 @@ const assets = ({ handlers, src }) => {
       delete database[normalizedFilename];
     }
   };
-  lookup.all = () => database;
-  return lookup;
+  repack.all = () => database;
+  return repack;
 };
 
 export = assets;

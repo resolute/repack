@@ -48,7 +48,9 @@ const marko = (asset) => ({ rewrite = defaultRewrite } = {}) => async (filename,
   const template = require(path.join(process.cwd(), filename));
   const dirname = path.dirname(outFile);
   await mkdir(dirname, { recursive: true });
-  writeFile(outFile, await template.render({ ...(await config), asset }));
+  const data = { ...(await config), $global: { repack: asset } };
+  await writeFile(outFile, await template.render(data));
+  // console.debug(`FINISHED: ${outFile}`);
 };
 
 marko.delete = (filename) => {

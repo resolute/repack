@@ -1,10 +1,12 @@
 import fs = require('fs');
 import probe = require('probe-image-size');
+
 const Svgo = require('svgo');
 
 const svg = (asset) => async (input) => {
   const { filename } = input;
   try {
+    // const content = fs.readFileSync(filename, 'utf-8');
     const content = await fs.promises.readFile(filename, 'utf-8');
     const { data } = await new Svgo({
       // datauri: 'unenc', // our regex escaping is better than encodeURIComponent()
