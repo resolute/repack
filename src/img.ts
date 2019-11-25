@@ -10,6 +10,7 @@ import imageminWebp = require('imagemin-webp');
 const normalizeDimensions = (options: any = {}) => {
   let width: number;
   let height: number;
+  // eslint-disable-next-line prefer-const
   let { width: w, height: h, ...other } = options;
   w = Number(w);
   h = Number(h);

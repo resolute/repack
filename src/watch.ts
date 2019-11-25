@@ -44,29 +44,31 @@ const debounceAndAggregate = (fn: Function, threshold?: number) => {
   };
 };
 
-const watch = (asset) => {
+const watch = (repack) => {
   // TODO dynamic config
   if (watcher) {
     return watcher;
   }
 
-  const run = debounceAndAggregate((paths) => {
+  const run = debounceAndAggregate(async (paths) => {
+    const invalidatedFiles: string[] = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const [relative, cwd] of paths) {
       if (/\.marko/.test(relative)) {
         marko.delete(path.join(cwd, relative));
       } else if (/\.(?:svg|s?css)$/.test(relative)) {
-        Object.keys(asset.all()).filter((filename) => /\.s?css/.test(filename)).forEach((filename) => {
-          asset.delete(filename);
+        Object.keys(repack.all()).filter((filename) => /\.s?css/.test(filename)).forEach((filename) => {
+          invalidatedFiles.push(filename);
         });
       } else if (/\.[jt]s$/.test(relative)) {
-        Object.keys(asset.all()).filter((filename) => /\.[jt]s]/.test(filename)).forEach((filename) => {
-          asset.delete(filename);
+        Object.keys(repack.all()).filter((filename) => /\.[jt]s]/.test(filename)).forEach((filename) => {
+          invalidatedFiles.push(filename);
         });
       }
-      asset.delete(relative);
+      invalidatedFiles.push(relative);
     }
-    asset.run();
+    await Promise.all(invalidatedFiles.map((file) => repack.delete(file)));
+    return repack.run();
   }, 16);
 
   watcher = sane(process.cwd(), { ignored: [/node_modules/, /web\/s\//, /web\/html\//, /\.marko\.js$/] })

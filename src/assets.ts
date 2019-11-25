@@ -130,7 +130,7 @@ const assets = ({ handlers, src }) => {
   };
   repack.delete = async (filename: string) => {
     // console.debug(`del requested: ${filename}`);
-    const srcSettled = await glob(src);
+    const srcSettled = await sourceGlob;
     const localFile = srcSettled.find(match(filename));
     const normalizedFilename = localFile || filename;
     if (database[normalizedFilename]) {

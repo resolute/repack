@@ -39,16 +39,16 @@ export = async (commandOptions?) => {
     ...commandOptions,
   };
   // console.debug('build invoked');
-  const asset = assets(options) as repack;
-  asset.run = () => options.run({
-    svg: svg(asset),
-    js: js(asset),
-    css: css(asset),
-    img: img(asset),
-    marko: marko(asset),
+  const repack = assets(options) as repack;
+  repack.run = () => options.run({
+    svg: svg(repack),
+    js: js(repack),
+    css: css(repack),
+    img: img(repack),
+    marko: marko(repack),
     glob,
-    asset,
+    repack,
   });
-  asset.watch = () => watch(asset);
-  return asset;
+  repack.watch = () => watch(repack);
+  return repack;
 };
