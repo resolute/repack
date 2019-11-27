@@ -14,7 +14,9 @@ const destUri = '/s';
 
 const mimeToExt = (mime) => {
   switch (mime) {
+    case 'font/woff2': return '.woff2';
     case 'application/font-woff2': return '.woff2';
+    case 'font/woff': return '.woff';
     case 'application/font-woff': return '.woff';
     case 'image/jpeg': return '.jpg';
     case 'image/png': return '.png';

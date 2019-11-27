@@ -1,6 +1,8 @@
 import { register } from 'ts-node';
 import { Watcher } from 'sane';
 
+import fs = require('fs');
+
 import svg = require('./svg');
 import js = require('./js');
 import css = require('./css');
@@ -17,11 +19,15 @@ if (Object.keys(require.extensions).indexOf('.ts') === -1) {
   });
 }
 
+const doNothing = (repack) => async (input) => (input.data ? input :
+  { ...input, data: await fs.promises.readFile(input.filename) });
+
 const defaultHandlers = [
   [['.jpg', '.png', '.webp', '.gif'], img],
   [['.svg'], svg],
   [['.css'], css],
   [['.js'], js],
+  [['.woff2', '.woff'], doNothing],
 ];
 const defaultSrc = ['**/*', '!**/node_modules'];
 
