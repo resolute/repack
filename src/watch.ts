@@ -57,11 +57,11 @@ const watch = (repack) => {
       if (/\.marko/.test(relative)) {
         marko.delete(path.join(cwd, relative));
       } else if (/\.(?:svg|s?css)$/.test(relative)) {
-        Object.keys(repack.all()).filter((filename) => /\.s?css/.test(filename)).forEach((filename) => {
+        Object.keys(repack.all()).filter((filename) => /\.s?css$/.test(filename)).forEach((filename) => {
           invalidatedFiles.push(filename);
         });
       } else if (/\.[jt]s$/.test(relative)) {
-        Object.keys(repack.all()).filter((filename) => /\.[jt]s]/.test(filename)).forEach((filename) => {
+        Object.keys(repack.all()).filter((filename) => /\.[jt]s$/.test(filename)).forEach((filename) => {
           invalidatedFiles.push(filename);
         });
       }
