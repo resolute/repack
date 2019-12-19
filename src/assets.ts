@@ -6,6 +6,8 @@ import got = require('got');
 import glob = require('fast-glob');
 import Version = require('./version');
 
+const cache = new Map();
+
 const { readFile, writeFile } = fs.promises;
 
 const database: { [filename: string]: { [variant: string]: Promise<Version> } } = {};
@@ -102,9 +104,11 @@ const assets = ({ handlers, src }) => {
       let data: Buffer | string | undefined;
       let ext: string = extMap(path.parse(filename).ext);
       if (/https?:/.test(filename)) {
-        const { headers, body } = await got(filename, { responseType: 'buffer' });
+        // console.debug(`ASSET.TS Downloading: ${filename}`);
+        const { headers, body } = await got(filename, { responseType: 'buffer', cache });
         ext = mimeToExt(headers['content-type']);
         data = body;
+        // console.debug(`ASSET.TS Finished: ${filename} data.length = ${data.length}\nheaders = ${headers}`);
       }
       const [handler] = handlers
         .filter(([extensions]) => extensions.indexOf(ext) !== -1)
