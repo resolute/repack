@@ -74,7 +74,6 @@
   },
   "devDependencies": {
     "@types/autoprefixer": "*",
-    "@types/got": "*",
     "@types/imagemin": "*",
     "@types/imagemin-jpegtran": "*",
     "@types/imagemin-mozjpeg": "*",

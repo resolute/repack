@@ -102,7 +102,7 @@ const assets = ({ handlers, src }) => {
       let data: Buffer | string | undefined;
       let ext: string = extMap(path.parse(filename).ext);
       if (/https?:/.test(filename)) {
-        const { headers, body } = await got(filename, { encoding: null });
+        const { headers, body } = await got(filename, { responseType: 'buffer' });
         ext = mimeToExt(headers['content-type']);
         data = body;
       }
