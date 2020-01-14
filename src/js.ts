@@ -12,7 +12,7 @@ const js = (asset) => async (input, variant) => { // => async (legacy = false) =
   const { filename } = input;
   // TODO figure out how to do variants
   const legacy = variant === 'legacy';
-  console.log(`legacy ${legacy}`);
+  // console.log(`legacy ${legacy}`);
   const { generate } = await rollup({
     input: filename,
     plugins: [

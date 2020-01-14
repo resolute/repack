@@ -105,6 +105,7 @@ const assets = ({ handlers, src }) => {
       let ext: string = extMap(path.parse(filename).ext);
       if (/https?:/.test(filename)) {
         // console.debug(`ASSET.TS Downloading: ${filename}`);
+        // @ts-ignore
         const { headers, body } = await got(filename, { responseType: 'buffer', cache });
         ext = mimeToExt(headers['content-type']);
         data = body;
