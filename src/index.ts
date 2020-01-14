@@ -33,6 +33,14 @@ const defaultSrc = ['**/*', '!**/node_modules'];
 
 const buildConfig = import(`${process.cwd()}/etc/build`).catch((error) => {
   process.emitWarning('No etc/build.ts found, using defaults.', 'BuildWarning');
+  return {
+    run: async ({ glob, marko }: any) => {
+      const config = await import(`${process.cwd()}/etc/config`).catch(() => ({}));
+      const templates = await glob(['tpl/**/*.marko', '!tpl/components/**/*']);
+      Promise.all(templates
+        .map((template: any) => marko()(template, config)));
+    },
+  };
 });
 
 type repack = ReturnType<typeof assets> & { run: () => Promise<any>; watch: () => Watcher; };
