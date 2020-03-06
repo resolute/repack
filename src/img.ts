@@ -7,17 +7,47 @@ import imageminMozjpeg = require('imagemin-mozjpeg');
 import imageminPngquant = require('imagemin-pngquant');
 import imageminWebp = require('imagemin-webp');
 
-const normalizeDimensions = (options: any = {}) => {
+const isFinite = (num: any): num is number => {
+  if (!Number.isNaN(num) && Number.isFinite(num)) {
+    return true;
+  }
+  return false;
+};
+
+const normalizeDimensions = (original: any = {}, target: any = {}) => {
+  const { width: targetWidth, height: targetHeight, ...nonWidthHeightOptions } = target;
+  if (isFinite(target.width) && isFinite(target.height)) {
+    if (target.width <= original.width && target.height <= original.height) {
+      return { width: target.width, height: target.height, ...nonWidthHeightOptions };
+    }
+    const targetAspect = target.width / target.height;
+    const originalAspect = original.width / original.height;
+    // one of the target dimensions is higher than the original, so we must find
+    // the largest box with targetAspect that will fit in the original:
+    let resolvedWidth = original.width;
+    let resolvedHeight = original.height;
+    if (originalAspect > targetAspect) {
+      resolvedWidth = Math.floor(original.height * targetAspect);
+    }
+    if (originalAspect < targetAspect) {
+      resolvedHeight = Math.floor(original.width / targetAspect);
+    }
+    return {
+      width: resolvedWidth,
+      height: resolvedHeight,
+      ...nonWidthHeightOptions,
+    };
+  }
   let width: number;
   let height: number;
   // eslint-disable-next-line prefer-const
-  let { width: w, height: h, ...other } = options;
+  let { width: w, height: h, ...other } = target;
   w = Number(w);
   h = Number(h);
-  if (!Number.isNaN(w) && Number.isFinite(w)) {
+  if (isFinite(w)) {
     width = w;
   }
-  if (!Number.isNaN(h) && Number.isFinite(h)) {
+  if (isFinite(h)) {
     height = h;
   }
   // @ts-ignore
@@ -34,7 +64,10 @@ const img = (asset) => async (input, variant) => {
   let image = original;
   let buffer: Buffer;
   if (options.width || options.height) {
-    image = image.resize({ ...normalizeDimensions(options), withoutEnlargement: false });
+    image = image.resize({
+      ...normalizeDimensions({ width, height }, options),
+      withoutEnlargement: true,
+    });
   }
   // TODO test for valid formats
   if (targetFormat) {

@@ -16,6 +16,7 @@ if (Object.keys(require.extensions).indexOf('.ts') === -1) {
   // Node.js can require() `.ts` files
   register({
     project: `${process.cwd()}/tsconfig.json`,
+    transpileOnly: true,
   });
 }
 
@@ -63,6 +64,11 @@ export = async (commandOptions?) => {
     glob,
     repack,
   });
-  repack.watch = () => watch(repack);
+  repack.watch = () => watch(repack, options.watch);
   return repack;
 };
+
+// setInterval(() => {
+//   console.log(Object.entries(process.memoryUsage())
+//     .map(([key, val]) => `${key}: ${(~~(val / 1024 / 1024)).toLocaleString()} mb`).join('\t'));
+// }, 1000).unref();

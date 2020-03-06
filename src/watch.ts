@@ -1,3 +1,4 @@
+import { Watch } from 'typescript';
 import { Watcher } from './types';
 
 import path = require('path');
@@ -44,7 +45,11 @@ const debounceAndAggregate = (fn: Function, threshold?: number) => {
   };
 };
 
-const watch = (repack) => {
+interface WatchOptions {
+  ignore: (string | RegExp)[];
+}
+
+const watch = (repack, options: Partial<WatchOptions> = {}) => {
   // TODO dynamic config
   if (watcher) {
     return watcher;
@@ -71,7 +76,7 @@ const watch = (repack) => {
     return repack.run();
   }, 16);
 
-  watcher = sane(process.cwd(), { ignored: [/node_modules/, /web\/s\//, /web\/html\//, /\.marko\.js$/] })
+  watcher = sane(process.cwd(), { ignored: [/node_modules/, /web\/s\//, /web\/html\//, /\.marko\.js$/, ...(options?.ignore || [])] })
     .on('change', run)
     .on('add', run)
     .on('delete', run);

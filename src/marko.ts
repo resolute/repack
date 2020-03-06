@@ -44,13 +44,13 @@ const defaultRewrite = (path: string) => path.replace(/^.*?tpl\//, 'web/html/').
 // export = html;
 const marko = (asset) => ({ rewrite = defaultRewrite } = {}) => async (filename, config) => {
   const outFile = rewrite(filename);
-  console.debug(`${filename} → ${outFile}`);
+  console.debug(`… ${filename} → ${outFile}`);
   const template = require(path.join(process.cwd(), filename));
   const dirname = path.dirname(outFile);
   await mkdir(dirname, { recursive: true });
   const data = { ...(await config), $global: { repack: asset } };
   await writeFile(outFile, await template.render(data));
-  // console.debug(`FINISHED: ${outFile}`);
+  console.debug(`✓ ${filename} → ${outFile}`);
 };
 
 marko.delete = (filename) => {
