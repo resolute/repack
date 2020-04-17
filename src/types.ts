@@ -5,7 +5,7 @@ export interface Watcher extends sane.Watcher { }
 export interface VersionParams {
   filename: string;
   ext: string;
-  data: Buffer | string;
+  data?: Buffer | string;
   hash?: string;
   destUri: string;
   destDir: string;

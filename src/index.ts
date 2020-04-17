@@ -48,6 +48,7 @@ type repack = ReturnType<typeof assets> & { run: () => Promise<any>; watch: () =
 
 export = async (commandOptions?) => {
   const options = {
+    jsonFile: 'etc/assets.json',
     handlers: defaultHandlers,
     src: defaultSrc,
     ...(await buildConfig),

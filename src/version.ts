@@ -17,7 +17,7 @@ const bufferFromUInt32 = (number) => {
 class Version {
   public filename: string;
   public ext: string;
-  public data: Buffer | string;
+  public _data?: Buffer | string | Promise<Buffer | string>;
   public hash: string;
   public destUri: string;
   public destDir: string;
@@ -35,7 +35,7 @@ class Version {
   }: VersionParams) {
     this.filename = filename;
     this.ext = ext;
-    this.data = data;
+    this._data = data;
     if (hash) {
       this.hash = hash;
     } else {
@@ -77,6 +77,17 @@ class Version {
     };
   }
 
+  public get data() {
+    if (typeof this._data !== 'undefined') {
+      return this._data;
+    }
+    return fs.promises.readFile(this.dir);
+  }
+
+  public set data(data: string | Buffer | Promise<string | Buffer>) {
+    this._data = data;
+  }
+
   public json() {
     return this.toJSON();
   }
@@ -87,7 +98,7 @@ class Version {
 
   public async write() {
     await fs.promises.mkdir(path.dirname(this.dir), { recursive: true });
-    return fs.promises.writeFile(this.dir, this.data);
+    return fs.promises.writeFile(this.dir, await this.data);
   }
 
   private get dir() {

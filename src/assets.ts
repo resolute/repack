@@ -1,4 +1,6 @@
 /* eslint-disable no-restricted-syntax */
+import { VersionParams } from './types';
+
 import fs = require('fs');
 import path = require('path');
 
@@ -29,44 +31,6 @@ const mimeToExt = (mime) => {
 
 const extMap = (str: string) => str.replace(/\.ts$/, '.js').replace(/\.s[ca]ss$/, '.css');
 
-// const readJson = async (file = 'etc/assets.json') => {
-//   try {
-//     const raw = await readFile(file);
-//     return JSON.parse(raw.toString());
-//   } catch {
-//     return [];
-//   }
-// };
-
-// const read = async (file = 'etc/assets.json') => {
-//   const json = await readJson(file);
-//   // @ts-ignore
-//   return Object.entries(json).map((asset) => version({ ...asset, destDir, destUri }));
-// };
-
-const save = async (file = 'etc/assets.json') => {
-  // TODO sort
-  await writeFile(file, JSON.stringify(
-    await (async () => {
-      const result = {};
-      for (const [filename, value] of Object.entries(database)) {
-        result[filename] = {};
-        for (const [variant, payload] of Object.entries(value)) {
-          // eslint-disable-next-line no-await-in-loop
-          result[filename][variant] = await payload;
-        }
-      }
-      return result;
-    })(),
-    null,
-    4,
-  ));
-};
-process.on('beforeExit', async () => {
-  await save();
-  process.exit();
-});
-
 const match = (needle: string) => (haystack) => {
   // const matcher = new RegExp(`${filename}`);
   if (haystack.indexOf(needle) !== -1) {
@@ -78,20 +42,59 @@ const match = (needle: string) => (haystack) => {
   return false;
 };
 
-const assets = ({ handlers, src }) => {
+const assets = ({ handlers, src, jsonFile }) => {
   // console.debug('NEW asset database instance!!!');
   const sourceGlob = glob(src);
+
+  const read = async (file = jsonFile) => {
+    try {
+      const json = JSON.parse((await readFile(file)).toString()) as {
+        [filename: string]: { [variant: string]: VersionParams }
+      };
+      for (const [filenameKey, variant] of Object.entries(json)) {
+        if (!(filenameKey in database)) {
+          database[filenameKey] = {};
+        }
+        for (const [variantKey, versionJson] of Object.entries(variant)) {
+          database[filenameKey][variantKey] = Promise.resolve(new Version(versionJson));
+        }
+      }
+    } catch {
+      // do nothing
+    }
+  };
+
+  read(jsonFile);
+
+  const save = async (file = jsonFile) => {
+    // TODO sort
+    await writeFile(file, JSON.stringify(
+      await (async () => {
+        const result = {};
+        for (const [filename, value] of Object.entries(database)) {
+          result[filename] = {};
+          for (const [variant, payload] of Object.entries(value)) {
+            // eslint-disable-next-line no-await-in-loop
+            result[filename][variant] = await payload;
+          }
+        }
+        return result;
+      })(),
+      null,
+      2,
+    ));
+  };
+  process.on('beforeExit', async () => {
+    await save();
+    process.exit();
+  });
+
   const repack = async (filename: string, variant = 'generic') => {
     // console.debug(`repack: ${filename}`);
     const srcSettled = await sourceGlob;
     const localFile = srcSettled.find(match(filename));
     const normalizedFilename = localFile || filename;
     const variantSlug = typeof variant === 'string' ? variant : JSON.stringify(variant);
-    // const found = variantLookup(normalizedFilename);
-    // if (found) {
-    //   // console.debug(`FOUND ${filename} normalized: ${normalizedFilename}`);
-    //   return found;
-    // }
     if (database[normalizedFilename] && database[normalizedFilename][variantSlug]) {
       // console.debug(`repack: HIT: ${filename}`);
       return database[normalizedFilename][variantSlug];
@@ -127,7 +130,8 @@ const assets = ({ handlers, src }) => {
       return new Version({
         filename,
         ext,
-        data: localFile ? await readFile(localFile) : data!,
+        // data: localFile ? await readFile(localFile) : data!,
+        data: data!,
         destUri,
         destDir,
       });
