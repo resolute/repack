@@ -1,4 +1,11 @@
-import path = require('path');
+import path from 'path';
+import util from 'util';
+import autoprefixer from 'autoprefixer';
+import postcss from 'postcss';
+import postcssSorting from 'postcss-sorting';
+import cssMqpacker from 'css-mqpacker';
+import sass from 'sass';
+import { Handler } from './types';
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '"': '\'',
@@ -12,58 +19,49 @@ const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '|': '%7C',
 }[i]));
 
-const util = require('util');
-const autoprefixer = require('autoprefixer');
-const postcss = require('postcss');
-const postcssSorting = require('postcss-sorting');
-const cssMqpacker = require('css-mqpacker');
-const sass = require('sass');
-
 const sassRender = util.promisify(sass.render);
 
-const css = (asset) => async (input) => {
-  const { filename } = input;
-  return sassRender({
-    file: filename,
-    includePaths: [path.dirname(filename)],
-    outputStyle: 'compressed',
-    functions: {
-      // TODO 'asset' helper function for SASS
-      'asset($file, $inline: "")': (rawFile, rawInline, done) => {
-        const file = rawFile.getValue();
-        const inline = rawInline.getValue();
-        if (inline !== '') {
-          // TODO handle base64 encoding, etc…
-        }
-        asset(file).then((version) => {
-          done(new sass.types.String(`url("${version.uri}")`));
-        });
-      },
-      'inline-svg($file, $fill:"")': (rawFile, rawFill, done) => {
-        const file = rawFile.getValue();
-        const fill = rawFill.getValue();
-        if (!file) {
-          throw new Error('No SVG file specified');
-        }
-        asset(file).then((version) => {
-          const svg = version.data;
-          if (!svg /* || !(svg instanceof Version) */) {
-            throw new Error(`${file} not found in svg object.`);
-          }
-          let data = svg.toString();
-          if (fill !== '') {
-            data = data.replace(/(['"])#[0-9A-Fa-f]{3,6}/g,
-              `$1#${fill.replace(/^#/, '')}`);
-          }
-          done(new sass.types.String(`url("data:image/svg+xml,${escape(data)}")`));
-        }).catch((error) => {
-          console.error(error);
-        });
-      },
+const css: Handler = (repack) => async ({ source: file }) => sassRender({
+  file,
+  includePaths: [path.dirname(file)],
+  outputStyle: 'compressed',
+  functions: {
+    // TODO 'asset' helper function for SASS
+    'asset($file, $inline: "")': (rawFile, rawInline, done) => {
+      const file = rawFile.getValue();
+      const inline = rawInline.getValue();
+      if (inline !== '') {
+        // TODO handle base64 encoding, etc…
+      }
+      repack(file).then((version) => {
+        done(new sass.types.String(`url("${version.uri}")`));
+      });
     },
-  })
-    .catch(sass.logError)
-    .then(({ css }) => postcss([
+    'inline-svg($file, $fill:"")': (rawFile, rawFill, done) => {
+      const file = rawFile.getValue();
+      const fill = rawFill.getValue();
+      if (!file) {
+        throw new Error('No SVG file specified');
+      }
+      repack(file).then((version) => version.data).then((svg) => {
+        if (!svg /* || !(svg instanceof Version) */) {
+          throw new Error(`${file} not found in svg object.`);
+        }
+        let data = svg.toString();
+        if (fill !== '') {
+          data = data.replace(/(['"])#[0-9A-Fa-f]{3,6}/g,
+            `$1#${fill.replace(/^#/, '')}`);
+        }
+        done(new sass.types.String(`url("data:image/svg+xml,${escape(data)}")`));
+      }).catch((error) => {
+        console.error(error);
+      });
+    },
+  },
+})
+  .catch(sass.logError)
+  .then(({ css }) =>
+    postcss([
       autoprefixer(),
       cssMqpacker(),
       postcssSorting({
@@ -73,8 +71,7 @@ const css = (asset) => async (input) => {
       }),
     ])
       .process(css, { from: undefined }))
-    // remove any left over newlines
-    .then(({ css }) => css.toString().replace(/\n/g, ''))
-    .then((data) => ({ ...input, data }));
-};
-export = css;
+  // remove any left over newlines
+  .then(({ css }) => Buffer.from(css.toString().replace(/\n/g, '')));
+
+export default css;

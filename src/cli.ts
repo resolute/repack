@@ -1,4 +1,4 @@
-import repack = require('./index');
+import repack from './index';
 
 (async () => {
   const instance = await repack();

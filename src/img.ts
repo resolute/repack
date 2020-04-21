@@ -1,11 +1,10 @@
-import fs = require('fs');
-import probe = require('probe-image-size');
-import sharp = require('sharp');
-import imagemin = require('imagemin');
-import imageminJpegtran = require('imagemin-jpegtran');
-import imageminMozjpeg = require('imagemin-mozjpeg');
-import imageminPngquant = require('imagemin-pngquant');
-import imageminWebp = require('imagemin-webp');
+import sharp from 'sharp';
+import imagemin from 'imagemin';
+import imageminJpegtran from 'imagemin-jpegtran';
+import imageminMozjpeg from 'imagemin-mozjpeg';
+import imageminPngquant from 'imagemin-pngquant';
+import imageminWebp from 'imagemin-webp';
+import { Handler } from './types';
 
 const isFinite = (num: any): num is number => {
   if (!Number.isNaN(num) && Number.isFinite(num)) {
@@ -54,15 +53,12 @@ const normalizeDimensions = (original: any = {}, target: any = {}) => {
   return { width, height, ...other };
 };
 
-const img = (asset) => async (input, variant) => {
-  const { filename, data } = input;
-  let { ext } = input;
+const img: Handler = (repack) => async (input, variant) => {
   const { format: targetFormat, ...options } = variant;
-  const original = sharp(data || await fs.promises.readFile(filename));
+  const original = sharp(await input.data);
   const { width, height, format: originalFormat } = await original.metadata();
   // console.debug(`original width x height ${width} x ${height} format: ${originalFormat}`);
   let image = original;
-  let buffer: Buffer;
   if (options.width || options.height) {
     image = image.resize({
       ...normalizeDimensions({ width, height }, options),
@@ -73,12 +69,14 @@ const img = (asset) => async (input, variant) => {
   if (targetFormat) {
     image = image.toFormat(targetFormat);
   }
-  buffer = await image.toBuffer();
+  let { type } = input;
+  const buffer = await image.toBuffer();
+  let data: Promise<Buffer>;
   switch (targetFormat || originalFormat) {
     case 'jpeg':
     case 'jpg':
-      ext = '.jpg';
-      buffer = await imagemin.buffer(buffer, {
+      type = 'jpg';
+      data = imagemin.buffer(buffer, {
         plugins: [
           imageminJpegtran(),
           imageminMozjpeg(),
@@ -86,29 +84,27 @@ const img = (asset) => async (input, variant) => {
       });
       break;
     case 'png':
-      ext = '.png';
-      buffer = await imagemin.buffer(buffer, {
+      type = 'png';
+      data = imagemin.buffer(buffer, {
         plugins: [
-          (imageminPngquant.default || imageminPngquant)({
+          imageminPngquant({
             quality: [0.6, 0.8],
           })],
       });
       break;
     case 'webp':
-      ext = '.webp';
-      buffer = await imagemin.buffer(buffer, {
+      type = 'webp';
+      data = imagemin.buffer(buffer, {
         plugins: [
           imageminWebp(),
         ],
       });
       break;
-    case 'tiff': ext = '.tiff'; break;
-    case 'heif': ext = '.heif'; break;
-    default: break;
+    default:
+      data = Promise.resolve(buffer);
+      break;
   }
-  return {
-    ...input, ext, width, height, data: buffer, ...(probe.sync(buffer)),
-  };
+  return { type, data };
 };
 
-export = img;
+export default img;

@@ -1,14 +1,14 @@
-import { Watch } from 'typescript';
-import { Watcher } from './types';
+import path from 'path';
+import sane from 'sane';
+import marko from './marko';
+import { Repack } from '.';
 
-import path = require('path');
-import sane = require('sane');
-import marko = require('./marko');
+export type SaneWatcher = sane.Watcher;
 
 // const unique = (val, index, arr) => arr.indexOf(val) === index;
 // const flatten = (acc, val) => acc.concat(val);
 
-let watcher: Watcher;
+let watcher: sane.Watcher;
 
 /**
  * debounce: Returns a function, that, as long as it continues to be
@@ -45,14 +45,15 @@ const debounceAndAggregate = (fn: Function, threshold?: number) => {
   };
 };
 
-interface WatchOptions {
+export interface WatchOptions {
   ignore: (string | RegExp)[];
 }
 
-const watch = (repack, options: Partial<WatchOptions> = {}) => {
+const watch = (repack: Repack, options: Partial<WatchOptions> = {}) => {
   // TODO dynamic config
   if (watcher) {
-    return watcher;
+    return;
+    // return watcher;
   }
 
   const run = debounceAndAggregate(async (paths) => {
@@ -76,12 +77,12 @@ const watch = (repack, options: Partial<WatchOptions> = {}) => {
     return repack.run();
   }, 16);
 
-  watcher = sane(process.cwd(), { ignored: [/node_modules/, /web\/s\//, /web\/html\//, /\.marko\.js$/, ...(options?.ignore || [])] })
+  watcher = sane(process.cwd(), { ignored: [...(options?.ignore || [])] })
     .on('change', run)
     .on('add', run)
     .on('delete', run);
 
-  return watcher;
+  // return watcher;
 };
 
-export = watch;
+export default watch;

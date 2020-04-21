@@ -1,21 +1,10 @@
-import sane = require('sane');
+import { Variant, Asset } from './variant';
+import { Repack } from '.';
 
-export interface Watcher extends sane.Watcher { }
+// export { Watcher } from 'sane';
 
-export interface VersionParams {
-  filename: string;
-  ext: string;
-  data?: Buffer | string;
-  hash?: string;
-  destUri: string;
-  destDir: string;
-  width?: number;
-  height?: number;
-}
+export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'gif' | 'woff2' | 'woff';
 
-export interface Payload {
-  data: VersionParams['data'],
-  ext?: VersionParams['ext'],
-  width?: VersionParams['width'],
-  height?: VersionParams['height'],
+export interface Handler {
+  (repack: Repack): (asset: Asset, varientOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
 }

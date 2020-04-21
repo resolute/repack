@@ -1,20 +1,18 @@
-import Rollup = require('rollup');
-import resolve = require('rollup-plugin-node-resolve');
-import commonjs = require('rollup-plugin-commonjs');
-import babel = require('rollup-plugin-babel');
-import json = require('rollup-plugin-json');
-import typescript = require('rollup-plugin-typescript');
-import terser = require('terser');
+import { rollup } from 'rollup';
+import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
+import babel from 'rollup-plugin-babel';
+import json from 'rollup-plugin-json';
+import typescript from 'rollup-plugin-typescript';
+import terser from 'terser';
+import { Handler } from './types';
 
-const { rollup } = Rollup;
-
-const js = (asset) => async (input, variant) => { // => async (legacy = false) => {
-  const { filename } = input;
+const js: Handler = (repack) => async ({ source: input }, variant) => {
   // TODO figure out how to do variants
   const legacy = variant === 'legacy';
   // console.log(`legacy ${legacy}`);
   const { generate } = await rollup({
-    input: filename,
+    input,
     plugins: [
       json(),
       typescript({
@@ -34,7 +32,7 @@ const js = (asset) => async (input, variant) => { // => async (legacy = false) =
         emitDecoratorMetadata: true,
         typeRoots: ['node_modules/@types'],
       }),
-      (resolve.default || resolve)({
+      resolve({
         mainFields: ['module', 'main', 'main:jsnext'],
         browser: true,
         preferBuiltins: false,
@@ -57,6 +55,7 @@ const js = (asset) => async (input, variant) => { // => async (legacy = false) =
       ] : []),
     ],
   });
+
   const bundle = (await generate({
     format: 'es',
     preferConst: true,
@@ -79,7 +78,11 @@ const js = (asset) => async (input, variant) => { // => async (legacy = false) =
     mangle: { toplevel: true },
   });
 
-  return { ...input, data: minified };
+  if (typeof minified === 'undefined') {
+    throw new Error(`JS optimization/minification failed for “${input}”`);
+  }
+
+  return Buffer.from(minified);
 };
 
-export = js;
+export default js;
