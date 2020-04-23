@@ -1,6 +1,6 @@
 import path from 'path';
 import sane from 'sane';
-import marko from './marko';
+import marko from './marko.js';
 import { Repack } from '.';
 
 export type SaneWatcher = sane.Watcher;

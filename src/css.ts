@@ -5,7 +5,7 @@ import postcss from 'postcss';
 import postcssSorting from 'postcss-sorting';
 import cssMqpacker from 'css-mqpacker';
 import sass from 'sass';
-import { Handler } from './types';
+import { Handler } from '.';
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '"': '\'',
@@ -27,7 +27,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
   outputStyle: 'compressed',
   functions: {
     // TODO 'asset' helper function for SASS
-    'asset($file, $inline: "")': (rawFile, rawInline, done) => {
+    'asset($file, $inline: "")': (rawFile: any, rawInline: any, done: any) => {
       const file = rawFile.getValue();
       const inline = rawInline.getValue();
       if (inline !== '') {
@@ -37,7 +37,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
         done(new sass.types.String(`url("${version.uri}")`));
       });
     },
-    'inline-svg($file, $fill:"")': (rawFile, rawFill, done) => {
+    'inline-svg($file, $fill:"")': (rawFile: any, rawFill: any, done: any) => {
       const file = rawFile.getValue();
       const fill = rawFill.getValue();
       if (!file) {
@@ -59,7 +59,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
     },
   },
 })
-  .catch(sass.logError)
+  // .catch(sass.logError)
   .then(({ css }) =>
     postcss([
       autoprefixer(),

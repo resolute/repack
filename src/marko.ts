@@ -1,32 +1,34 @@
-/* eslint-disable global-require */
 /* eslint-disable import/no-dynamic-require */
+import { createRequire } from 'module';
+
 import fs from 'fs';
 import path from 'path';
 import Marko from 'marko';
 
-import markoHotReload from 'marko/hot-reload';
-import markoNodeRequire from 'marko/node-require';
+import markoHotReload from 'marko/hot-reload.js';
 import { Repack } from '.';
 
-// Node.js can require() `.marko` files
-markoNodeRequire.install();
+const require = createRequire(import.meta.url);
+
 markoHotReload.enable({ silent: true });
 
-const { mkdir, writeFile } = fs.promises;
-
 const defaultRewrite = (path: string) => path.replace(/^.*?tpl\//, 'web/html/').replace(/\.marko$/, '.html');
+
+const trimDirectoryPrefix = (str: string) =>
+  str.replace(/^.*?tpl\//, '').replace(/^.*?web\/html\//, '');
+
 
 const marko = (repack: Repack) => {
   const marko = ({ rewrite = defaultRewrite } = {}) =>
     async (filename: string, config: any) => {
       const outFile = rewrite(filename);
-      console.debug(`… ${filename} → ${outFile}`);
+      console.debug(`… ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
       const template = require(path.join(process.cwd(), filename));
       const dirname = path.dirname(outFile);
-      await mkdir(dirname, { recursive: true });
+      await fs.promises.mkdir(dirname, { recursive: true });
       const data = { ...(await config), $global: { repack } };
-      await writeFile(outFile, await template.render(data));
-      console.debug(`✓ ${filename} → ${outFile}`);
+      await fs.promises.writeFile(outFile, (await template.render(data)).getOutput());
+      console.debug(`✓ ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
     };
   marko.render = (markup: string, data: any) => {
     if (!markup) {
@@ -38,7 +40,8 @@ const marko = (repack: Repack) => {
         markup,
         { buffer: true, writeToDisk: false },
       )
-      .render({ ...data, $global: { repack, ...data.$global } });
+      .render({ ...data, $global: { repack, ...data.$global } })
+      .then((result) => result.getOutput());
   };
   return marko;
 };
@@ -46,6 +49,5 @@ const marko = (repack: Repack) => {
 marko.delete = (filename) => {
   markoHotReload.handleFileModified(filename, { silent: true });
 };
-
 
 export default marko;

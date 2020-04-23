@@ -1,14 +1,8 @@
 import Svgo from 'svgo';
-import { Handler } from './types';
-
+import { Handler } from '.';
 
 const svg: Handler = (repack) => async (input) => {
   try {
-    // let incomingData = input.data;
-    // if (!incomingData) {
-    //   const { filename } = input;
-    //   incomingData = await fs.promises.readFile(filename, 'utf-8');
-    // }
     const { data } = await new Svgo({
       // datauri: 'unenc', // our regex escaping is better than encodeURIComponent()
       plugins: [

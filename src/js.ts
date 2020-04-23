@@ -5,7 +5,7 @@ import babel from 'rollup-plugin-babel';
 import json from 'rollup-plugin-json';
 import typescript from 'rollup-plugin-typescript';
 import terser from 'terser';
-import { Handler } from './types';
+import { Handler } from '.';
 
 const js: Handler = (repack) => async ({ source: input }, variant) => {
   // TODO figure out how to do variants

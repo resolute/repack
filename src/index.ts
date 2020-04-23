@@ -1,18 +1,27 @@
+// TODO port `srv/bin/prepare`, `srv/bin/squish`, and `srv/bin/clean` to TS and include in this repo
+
 /* eslint-disable no-restricted-syntax */
 import fs from 'fs';
-import { register } from 'ts-node';
+import { debuglog } from 'util';
+import { createRequire } from 'module';
+import tsNode from 'ts-node';
 import glob from 'fast-glob';
-import svg from './svg';
-import js from './js';
-import css from './css';
-import img from './img';
-import marko from './marko';
-import watch, { WatchOptions } from './watch';
+import svg from './svg.js';
+import js from './js.js';
+import css from './css.js';
+import img from './img.js';
+import marko from './marko.js';
+import watch, { WatchOptions } from './watch.js';
 import {
   asset, variant, Asset, Variant,
-} from './variant';
-import { match, doNothing } from './util';
-import { Handler, RepackTypes } from './types';
+} from './variant.js';
+import { match, doNothing } from './util.js';
+
+export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'gif' | 'woff2' | 'woff';
+
+export interface Handler {
+  (repack: Repack): (asset: Asset, varientOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
+}
 
 export type HandlerList = [RepackTypes[], Handler][];
 
@@ -32,6 +41,7 @@ export interface Repack {
   all: () => typeof database;
   delete: (filename: string) => Promise<void>;
   watch: () => void;
+  options: RepackOptions;
 }
 
 export interface RepackOptions {
@@ -40,34 +50,37 @@ export interface RepackOptions {
   src: string | string[];
   destDir: string;
   baseUri: string;
+  dev: boolean;
   watch: WatchOptions;
   run: (runtime: RunOptions) => Promise<void>;
 }
 
+process.title = 'repack';
+
+const debug = debuglog('repack');
+
+const require = createRequire(import.meta.url);
+
 const database: { [slug: string]: Promise<(Asset | Variant)> } = {};
 
-if (Object.keys(require.extensions).indexOf('.ts') === -1) {
-  // Node.js can require() `.ts` files
-  register({
-    project: `${process.cwd()}/tsconfig.json`,
-    transpileOnly: true,
-  });
-}
+// Node.js can require() `.ts` files
+tsNode.register({
+  project: `${process.cwd()}/tsconfig.json`,
+  transpileOnly: true,
+  compilerOptions: { module: 'commonjs' },
+});
 
-const buildConfig: Promise<Partial<RepackOptions>> =
-  import(`${process.cwd()}/etc/build`)
-    .then((config) => {
-      if ('default' in config) {
-        return config.default;
-      }
-      return config;
-    })
-    .catch(() => {
-      process.emitWarning('No etc/build.ts found, using defaults.', 'BuildWarning');
-      return {};
-    });
+const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
+  try {
+    // eslint-disable-next-line import/no-dynamic-require
+    return require(`${process.cwd()}/etc/build.ts`);
+  } catch (error) {
+    process.emitWarning(`Using default config, because unable to load user config: ${error}`, 'BuildWarning');
+    return {};
+  }
+})();
 
-export default async (commandOptions?: RepackOptions) => {
+export default async (commandOptions?: Partial<RepackOptions>) => {
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
@@ -80,8 +93,17 @@ export default async (commandOptions?: RepackOptions) => {
     src: ['**/*', '!**/node_modules'],
     destDir: 'web/s',
     baseUri: '/s',
+    dev: false,
     run: async ({ glob, marko }: any) => {
-      const config = await import(`${process.cwd()}/etc/config`).catch(() => ({}));
+      const configPath = `${process.cwd()}/etc/config.ts`;
+      // const config = await import(configPath).catch(() => ({}));
+      let config;
+      try {
+        // eslint-disable-next-line import/no-dynamic-require
+        config = require(configPath);
+      } catch (error) {
+        config = {};
+      }
       const templates = await glob(['tpl/**/*.marko', '!tpl/components/**/*']);
       Promise.all(templates
         .map((template: any) => marko()(template, config)));
@@ -136,13 +158,15 @@ export default async (commandOptions?: RepackOptions) => {
   };
 
   const repack: Repack = async (source: string, variantOptions = 'generic') => {
-    // console.debug(`asset.ts: repack('${source}', ${variantObject})`);
+    debug(`repack('${source}', ${variantOptions})`);
     const srcSettled = await sourceGlob;
     const localFile = srcSettled.find(match(source));
     const sourceSlug = localFile || source;
-    // console.debug(sourceSlug, variantObject);
     const variantString = typeof variantOptions === 'string' ? variantOptions : JSON.stringify(variantOptions);
     const variantSlug = `${sourceSlug}${variantString}`;
+    debug(`const sourceSlug = ${sourceSlug}`);
+    debug(`const variantString = ${variantString}`);
+    debug(`const variantSlug = ${variantSlug}`);
 
     if (!(sourceSlug in database)) {
       database[sourceSlug] = asset({ source: sourceSlug });
@@ -190,13 +214,13 @@ export default async (commandOptions?: RepackOptions) => {
   };
 
   repack.delete = async (filename: string) => {
-    // console.debug(`del requested: ${filename}`);
+    debug(`delete(filename = ${filename})`);
     const srcSettled = await sourceGlob;
     const localFile = srcSettled.find(match(filename));
     const normalizedFilename = localFile || filename;
     for (const key of Object.keys(database)) {
       if (key.indexOf(normalizedFilename) === 0) {
-        console.debug(`DELETE ${key}`);
+        debug(`delete: ${key}`);
         delete database[key];
       }
     }
@@ -215,6 +239,8 @@ export default async (commandOptions?: RepackOptions) => {
   });
 
   repack.watch = () => { watch(repack, options.watch); };
+
+  repack.options = options;
 
   read(options.jsonFile);
 

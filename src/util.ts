@@ -4,7 +4,7 @@ import got from 'got';
 import b64u from 'b64u';
 import probe from 'probe-image-size';
 import XxHash from 'xxhash';
-import { RepackTypes, Handler } from './types';
+import { RepackTypes, Handler } from '.';
 
 const gotCache = new Map();
 
@@ -90,14 +90,4 @@ export const doNothing: Handler = (repack) => async (asset) => {
     return asset.data;
   }
   return open(asset.source);
-};
-
-declare const require: any;
-export const deleteRequireCache = (regex: RegExp) => {
-  Object.keys(require.cache).forEach((id) => {
-    if (regex.test(id)) {
-      console.log('deleting cache for module:', id);
-      delete require.cache[id];
-    }
-  });
 };

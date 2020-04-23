@@ -4,7 +4,7 @@ import imageminJpegtran from 'imagemin-jpegtran';
 import imageminMozjpeg from 'imagemin-mozjpeg';
 import imageminPngquant from 'imagemin-pngquant';
 import imageminWebp from 'imagemin-webp';
-import { Handler } from './types';
+import { Handler } from '.';
 
 const isFinite = (num: any): num is number => {
   if (!Number.isNaN(num) && Number.isFinite(num)) {
@@ -70,6 +70,11 @@ const img: Handler = (repack) => async (input, variant) => {
     image = image.toFormat(targetFormat);
   }
   let { type } = input;
+  // console.debug(`repack.options.dev = ${repack.options.dev}`);
+  if (repack.options.dev) {
+    // console.debug('skipping optimization');
+    return { type, data: image.toBuffer() };
+  }
   const buffer = await image.toBuffer();
   let data: Promise<Buffer>;
   switch (targetFormat || originalFormat) {

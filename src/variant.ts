@@ -3,8 +3,8 @@
 /* eslint-disable no-underscore-dangle */
 import fs from 'fs';
 import path from 'path';
-import { open, xxhash, dimensions } from './util';
-import { RepackTypes } from './types';
+import { open, xxhash, dimensions } from './util.js';
+import { RepackTypes } from '.';
 
 
 export type AssetFromCache = Pick<Asset, 'source' | 'hash'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
