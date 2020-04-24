@@ -1,56 +1,44 @@
-/* eslint-disable global-require */
-/* eslint-disable import/no-dynamic-require */
+import { Repack } from './types';
+
 import fs = require('fs');
 import path = require('path');
-import markoHotReload = require('marko/hot-reload');
-import markoNodeRequire = require('marko/node-require');
+import Marko = require('marko');
+import markoHotReload =require('marko/hot-reload.js');
 
-// Node.js can require() `.marko` files
-markoNodeRequire.install();
 markoHotReload.enable({ silent: true });
-
-const { mkdir, writeFile } = fs.promises;
-
-// const html = (assets) => ([config, tpl, assets]) => Promise.all(tpl)
-//   .then((tpl) => Promise.all(tpl
-//     // @ts-ignore
-//     .filter(({ file }) => !/components/.test(file) && config.build.html.test(file))
-//     .map(({ file, template }) => {
-//       const outputFilename = `${config.build.htmlDir}/${
-//         file
-//           .replace(new RegExp(`^${config.build.tplDir}`), '')
-//           .replace(/\.marko$/, '.html')}`;
-//       const deepdirs = outputFilename.match(/^(.+)\/.+?$/);
-//       return (deepdirs ?
-//         mkdir(deepdirs[1], { recursive: true }) :
-//         Promise.resolve()
-//       )
-//         .then(async () =>
-//           writeFile(outputFilename,
-//             await template.render({ ...config, asset: assets.get })));
-//     })));
 
 const defaultRewrite = (path: string) => path.replace(/^.*?tpl\//, 'web/html/').replace(/\.marko$/, '.html');
 
-// const html = (asset) => ({ rewrite = defaultRewrite } = {}) => async (filename, config) => {
-//   const outFile = rewrite(filename);
-//   console.debug(`${filename} → ${outFile}`);
-//   const template = require(path.join(process.cwd(), filename));
-//   const dirname = path.dirname(outFile);
-//   await mkdir(dirname, { recursive: true });
-//   writeFile(outFile, await template.render({ ...(await config), asset }));
-// };
+const trimDirectoryPrefix = (str: string) =>
+  str.replace(/^.*?tpl\//, '').replace(/^.*?web\/html\//, '');
 
-// export = html;
-const marko = (asset) => ({ rewrite = defaultRewrite } = {}) => async (filename, config) => {
-  const outFile = rewrite(filename);
-  console.debug(`… ${filename} → ${outFile}`);
-  const template = require(path.join(process.cwd(), filename));
-  const dirname = path.dirname(outFile);
-  await mkdir(dirname, { recursive: true });
-  const data = { ...(await config), $global: { repack: asset } };
-  await writeFile(outFile, await template.render(data));
-  console.debug(`✓ ${filename} → ${outFile}`);
+
+const marko = (repack: Repack) => {
+  const marko = ({ rewrite = defaultRewrite } = {}) =>
+    async (filename: string, config: any) => {
+      const outFile = rewrite(filename);
+      console.debug(`… ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
+      const template = await import(path.join(process.cwd(), filename));
+      const dirname = path.dirname(outFile);
+      await fs.promises.mkdir(dirname, { recursive: true });
+      const data = { ...(await config), $global: { repack } };
+      await fs.promises.writeFile(outFile, (await template.render(data)).getOutput());
+      console.debug(`✓ ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
+    };
+  marko.render = (markup: string, data: any) => {
+    if (!markup) {
+      return undefined;
+    }
+    return Marko
+      .load(
+        `${process.cwd()}/tpl/${data.uri || Math.random()}.marko`,
+        markup,
+        { buffer: true, writeToDisk: false },
+      )
+      .render({ ...data, $global: { repack, ...data.$global } })
+      .then((result) => result.getOutput());
+  };
+  return marko;
 };
 
 marko.delete = (filename) => {

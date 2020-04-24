@@ -3,7 +3,8 @@
   "version": "0.0.4",
   "description": "Static site generator with asset optimization and versioning.",
   "bin": {
-    "repack": "bin/repack"
+    "repack": "./cli.js",
+    "compress": "./compress.js"
   },
   "main": "./",
   "types": "./",
@@ -12,10 +13,10 @@
     "*.d.ts"
   ],
   "scripts": {
-    "build": "npm run clean && npx tsc && npx prettier --write *.js *.d.ts && (npx eslint --fix *.js > /dev/null 2>&1; true)",
-    "release": "npx np",
+    "build": "npm run clean && tsc && chmod 755 cli.js compress.js && prettier --write *.js *.d.ts && (eslint --fix *.js > /dev/null 2>&1; true)",
+    "release": "np",
     "prepublishOnly": "npm test && npm run build",
-    "clean": "npx del-cli *.js *.js.map *.d.ts",
+    "clean": "del-cli *.js *.js.map *.d.ts",
     "test": "echo TODO"
   },
   "repository": {
@@ -28,7 +29,7 @@
   "homepage": "https://github.com/resolute/repack",
   "author": "Resolute Digital",
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "@babel/core": "*",
@@ -36,10 +37,8 @@
     "@babel/preset-env": "*",
     "autoprefixer": "*",
     "b64u": "*",
-    "builtin-modules": "*",
     "core-js": "*",
     "css-mqpacker": "*",
-    "esm": "*",
     "fast-glob": "*",
     "got": "*",
     "htmlmin": "*",
@@ -48,11 +47,10 @@
     "imagemin-mozjpeg": "*",
     "imagemin-pngquant": "*",
     "imagemin-webp": "*",
-    "juice": "*",
-    "marked": "*",
     "marko": "*",
-    "micromatch": "*",
+    "node-zopfli": "*",
     "sass": "*",
+    "p-map": "*",
     "postcss": "*",
     "postcss-sorting": "*",
     "probe-image-size": "*",
@@ -80,7 +78,6 @@
     "@types/imagemin-pngquant": "*",
     "@types/imagemin-webp": "*",
     "@types/marko": "*",
-    "@types/micromatch": "*",
     "@types/node": "*",
     "@types/sass": "*",
     "@types/rollup-plugin-json": "*",
@@ -89,10 +86,12 @@
     "@types/svgo": "*",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
+    "del-cli": "*",
     "eslint": "*",
     "eslint-config-airbnb-base": "*",
     "eslint-plugin-import": "*",
-    "np": "*"
+    "np": "*",
+    "prettier": "*"
   },
   "keywords": [
     "static site generator",
@@ -136,6 +135,7 @@
       "no-unused-vars": "off",
       "no-use-before-define": "off",
       "operator-linebreak": "off",
+      "import/extensions": "off",
       "spaced-comment": [
         "error",
         "always",
