@@ -1,17 +1,18 @@
-import { rollup } from 'rollup';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import babel from 'rollup-plugin-babel';
-import json from 'rollup-plugin-json';
-import typescript from 'rollup-plugin-typescript';
-import terser from 'terser';
-import { Handler } from '.';
+import { Handler } from './types';
+
+import rollup = require('rollup');
+import resolve = require('rollup-plugin-node-resolve');
+import commonjs = require('rollup-plugin-commonjs');
+import babel = require('rollup-plugin-babel');
+import json = require('rollup-plugin-json');
+import typescript = require('rollup-plugin-typescript');
+import terser = require('terser');
 
 const js: Handler = (repack) => async ({ source: input }, variant) => {
   // TODO figure out how to do variants
   const legacy = variant === 'legacy';
   // console.log(`legacy ${legacy}`);
-  const { generate } = await rollup({
+  const { generate } = await (rollup.rollup || rollup)({
     input,
     plugins: [
       json(),
@@ -32,7 +33,7 @@ const js: Handler = (repack) => async ({ source: input }, variant) => {
         emitDecoratorMetadata: true,
         typeRoots: ['node_modules/@types'],
       }),
-      resolve({
+      (resolve.default || resolve)({
         mainFields: ['module', 'main', 'main:jsnext'],
         browser: true,
         preferBuiltins: false,
@@ -85,4 +86,4 @@ const js: Handler = (repack) => async ({ source: input }, variant) => {
   return Buffer.from(minified);
 };
 
-export default js;
+export = js;

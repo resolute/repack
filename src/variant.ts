@@ -1,11 +1,13 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-underscore-dangle */
-import fs from 'fs';
-import path from 'path';
+import { promises as fs } from 'fs';
 import { open, xxhash, dimensions } from './util.js';
-import { RepackTypes } from '.';
+import { RepackTypes } from './types';
 
+import path = require('path');
+
+const { mkdir, writeFile } = fs;
 
 export type AssetFromCache = Pick<Asset, 'source' | 'hash'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
 export type AssetFromFresh = Pick<Asset, 'source'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
@@ -58,8 +60,8 @@ export const variant: VariantFactory = (config) => async (input) => {
   const result = new Variant({
     ...config, ...input, hash, ...dimensions(data, input.type),
   });
-  await fs.promises.mkdir(config.destDir, { recursive: true });
-  await fs.promises.writeFile(result.localFilePath, await result.data);
+  await mkdir(config.destDir, { recursive: true });
+  await writeFile(result.localFilePath, await result.data);
   return result;
 };
 

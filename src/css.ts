@@ -1,11 +1,12 @@
-import path from 'path';
-import util from 'util';
-import autoprefixer from 'autoprefixer';
-import postcss from 'postcss';
-import postcssSorting from 'postcss-sorting';
-import cssMqpacker from 'css-mqpacker';
-import sass from 'sass';
-import { Handler } from '.';
+import { dirname } from 'path';
+import { promisify } from 'util';
+import { Handler } from './types';
+
+import autoprefixer = require('autoprefixer');
+import postcss = require('postcss');
+import postcssSorting = require('postcss-sorting');
+import cssMqpacker = require('css-mqpacker');
+import sass = require('sass');
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '"': '\'',
@@ -19,11 +20,11 @@ const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '|': '%7C',
 }[i]));
 
-const sassRender = util.promisify(sass.render);
+const sassRender = promisify(sass.render);
 
 const css: Handler = (repack) => async ({ source: file }) => sassRender({
   file,
-  includePaths: [path.dirname(file)],
+  includePaths: [dirname(file)],
   outputStyle: 'compressed',
   functions: {
     // TODO 'asset' helper function for SASS
@@ -59,7 +60,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
     },
   },
 })
-  // .catch(sass.logError)
+  // .catch(logError)
   .then(({ css }) =>
     postcss([
       autoprefixer(),
@@ -74,4 +75,4 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
   // remove any left over newlines
   .then(({ css }) => Buffer.from(css.toString().replace(/\n/g, '')));
 
-export default css;
+export = css;

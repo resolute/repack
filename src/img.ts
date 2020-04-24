@@ -1,10 +1,11 @@
-import sharp from 'sharp';
-import imagemin from 'imagemin';
-import imageminJpegtran from 'imagemin-jpegtran';
-import imageminMozjpeg from 'imagemin-mozjpeg';
-import imageminPngquant from 'imagemin-pngquant';
-import imageminWebp from 'imagemin-webp';
-import { Handler } from '.';
+import { Handler } from './types';
+
+import sharp = require('sharp');
+import imagemin = require('imagemin');
+import imageminJpegtran = require('imagemin-jpegtran');
+import imageminMozjpeg = require('imagemin-mozjpeg');
+import imageminPngquant = require('imagemin-pngquant');
+import imageminWebp = require('imagemin-webp');
 
 const isFinite = (num: any): num is number => {
   if (!Number.isNaN(num) && Number.isFinite(num)) {
@@ -92,7 +93,7 @@ const img: Handler = (repack) => async (input, variant) => {
       type = 'png';
       data = imagemin.buffer(buffer, {
         plugins: [
-          imageminPngquant({
+          (imageminPngquant.default || imageminPngquant)({
             quality: [0.6, 0.8],
           })],
       });
@@ -112,4 +113,4 @@ const img: Handler = (repack) => async (input, variant) => {
   return { type, data };
 };
 
-export default img;
+export = img;

@@ -1,5 +1,6 @@
-import Svgo from 'svgo';
-import { Handler } from '.';
+import { Handler } from './types';
+
+import Svgo = require('svgo');
 
 const svg: Handler = (repack) => async (input) => {
   try {
@@ -21,4 +22,4 @@ const svg: Handler = (repack) => async (input) => {
   }
 };
 
-export default svg;
+export = svg;

@@ -6,7 +6,6 @@
     "repack": "./cli.js",
     "compress": "./compress.js"
   },
-  "type": "module",
   "main": "./",
   "types": "./",
   "files": [

@@ -1,86 +1,47 @@
-// TODO port `srv/bin/prepare`, `srv/bin/squish`, and `srv/bin/clean` to TS and include in this repo
-
 /* eslint-disable no-restricted-syntax */
-import fs from 'fs';
+import { promises as fs } from 'fs';
 import { debuglog } from 'util';
-import { createRequire } from 'module';
-import tsNode from 'ts-node';
-import glob from 'fast-glob';
-import svg from './svg.js';
-import js from './js.js';
-import css from './css.js';
-import img from './img.js';
-import marko from './marko.js';
-import watch, { WatchOptions } from './watch.js';
+import { Database, Repack, RepackOptions } from './types';
 import {
   asset, variant, Asset, Variant,
 } from './variant.js';
 import { match, doNothing } from './util.js';
 
-export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'gif' | 'woff2' | 'woff';
-
-export interface Handler {
-  (repack: Repack): (asset: Asset, varientOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
-}
-
-export type HandlerList = [RepackTypes[], Handler][];
-
-export interface RunOptions {
-  svg: ReturnType<Handler>;
-  js: ReturnType<Handler>;
-  css: ReturnType<Handler>;
-  img: ReturnType<Handler>;
-  marko: ReturnType<typeof marko>;
-  glob: typeof glob;
-  repack: Repack;
-}
-
-export interface Repack {
-  (source: string, variantOptions?: any): Promise<Variant>;
-  run: () => Promise<void>;
-  all: () => typeof database;
-  delete: (filename: string) => Promise<void>;
-  watch: () => void;
-  options: RepackOptions;
-}
-
-export interface RepackOptions {
-  jsonFile: string;
-  handlers: HandlerList;
-  src: string | string[];
-  destDir: string;
-  baseUri: string;
-  dev: boolean;
-  watch: WatchOptions;
-  run: (runtime: RunOptions) => Promise<void>;
-}
+import svg = require('./svg.js');
+import js = require('./js.js');
+import css = require('./css.js');
+import img = require('./img.js');
+import marko = require('./marko.js');
+import watch = require('./watch.js');
+import tsNode = require('ts-node');
+import glob = require('fast-glob');
 
 process.title = 'repack';
 
 const debug = debuglog('repack');
+const { readFile, writeFile } = fs;
 
-const require = createRequire(import.meta.url);
-
-const database: { [slug: string]: Promise<(Asset | Variant)> } = {};
+const database: Database = {};
 
 // Node.js can require() `.ts` files
-tsNode.register({
-  project: `${process.cwd()}/tsconfig.json`,
-  transpileOnly: true,
-  compilerOptions: { module: 'commonjs' },
-});
+if (Object.keys(require.extensions).indexOf('.ts') === -1) {
+  tsNode.register({
+    project: `${process.cwd()}/tsconfig.json`,
+    transpileOnly: true,
+    compilerOptions: { module: 'commonjs' },
+  });
+}
 
 const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
   try {
-    // eslint-disable-next-line import/no-dynamic-require
-    return require(`${process.cwd()}/etc/build.ts`);
+    return await import(`${process.cwd()}/etc/build.ts`);
   } catch (error) {
     process.emitWarning(`Using default config, because unable to load user config: ${error}`, 'BuildWarning');
     return {};
   }
 })();
 
-export default async (commandOptions?: Partial<RepackOptions>) => {
+const repack = async (commandOptions?: Partial<RepackOptions>) => {
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
@@ -96,11 +57,9 @@ export default async (commandOptions?: Partial<RepackOptions>) => {
     dev: false,
     run: async ({ glob, marko }: any) => {
       const configPath = `${process.cwd()}/etc/config.ts`;
-      // const config = await import(configPath).catch(() => ({}));
       let config;
       try {
-        // eslint-disable-next-line import/no-dynamic-require
-        config = require(configPath);
+        config = await import(configPath);
       } catch (error) {
         config = {};
       }
@@ -126,7 +85,7 @@ export default async (commandOptions?: Partial<RepackOptions>) => {
 
   const read = async (file = options.jsonFile) => {
     try {
-      const json = JSON.parse((await fs.promises.readFile(file)).toString()) as {
+      const json = JSON.parse((await readFile(file)).toString()) as {
         [slug: string]: Asset | Variant
       };
       for (const [slug, payload] of Object.entries(json)) {
@@ -143,7 +102,7 @@ export default async (commandOptions?: Partial<RepackOptions>) => {
 
   const save = async (file = options.jsonFile) => {
     // TODO sort
-    await fs.promises.writeFile(file, JSON.stringify(
+    await writeFile(file, JSON.stringify(
       await (async () => {
         const result = {};
         for (const [key, payload] of Object.entries(database)) {
@@ -256,3 +215,5 @@ export default async (commandOptions?: Partial<RepackOptions>) => {
 //   console.log(Object.entries(process.memoryUsage())
 //     .map(([key, val]) => `${key}: ${(~~(val / 1024 / 1024)).toLocaleString()} mb`).join('\t'));
 // }, 1000).unref();
+
+export = repack;

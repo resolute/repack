@@ -1,18 +1,21 @@
 #!/usr/bin/env node
-import os from 'os';
-import fs, { createReadStream, createWriteStream } from 'fs';
+import { promises as fs, createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
+import { cpus } from 'os';
 import {
   createBrotliCompress, createBrotliDecompress, createGunzip,
 } from 'zlib';
-import pMap from 'p-map';
-import zopfli from 'node-zopfli';
-import glob from 'fast-glob';
-import xxhash from 'xxhash';
+
+import pMap = require('p-map');
+import zopfli = require('node-zopfli');
+import glob = require('fast-glob');
+import xxhash = require('xxhash');
+
+const { stat, utimes, unlink } = fs;
 
 const root = process.argv[2] || process.cwd();
-const concurrency = os.cpus().length;
+const concurrency = cpus().length;
 const pipe = promisify(pipeline);
 const minSize = 1300;
 const extensions = ['js', 'html', 'css', 'json', 'xml', 'csv', 'eot', 'svg', 'ttf', 'ico'];
@@ -39,11 +42,11 @@ const compress = async (
   hash: number,
 ) => {
   try {
-    // await fs.promises.access(output, fs.constants.F_OK);
-    const { size: compressedSize } = await fs.promises.stat(output);
+    // await access(output, fs.constants.F_OK);
+    const { size: compressedSize } = await stat(output);
     const compressedHash = await hasher(createReadStream(output), decompression());
     if (hash === compressedHash) {
-      await fs.promises.utimes(output, mtime, mtime);
+      await utimes(output, mtime, mtime);
       console.log(`✓ ${output} ${((100 * compressedSize) / size).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`);
       return;
     }
@@ -51,18 +54,18 @@ const compress = async (
     //
   }
   await pipe(createReadStream(input), compression(), createWriteStream(output));
-  const { size: compressedSize } = await fs.promises.stat(output);
+  const { size: compressedSize } = await stat(output);
   if (compressedSize > size) {
     process.emitWarning(`! ${output} is larger than ${input}, deleting...`, 'CompressWarning');
-    await fs.promises.unlink(output);
+    await unlink(output);
   } else {
-    await fs.promises.utimes(output, mtime, mtime);
+    await utimes(output, mtime, mtime);
     console.log(`c ${output} ${((100 * compressedSize) / size).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`);
   }
 };
 
 const main = async (path: string) => {
-  const { mtime, size } = await fs.promises.stat(path);
+  const { mtime, size } = await stat(path);
   if (size <= minSize) {
     console.log(`! ${path}: less than ${minSize.toLocaleString()} bytes, skipping...`);
     return;

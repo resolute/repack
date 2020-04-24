@@ -1,10 +1,13 @@
-import fs from 'fs';
-import path from 'path';
-import got from 'got';
-import b64u from 'b64u';
-import probe from 'probe-image-size';
-import XxHash from 'xxhash';
-import { RepackTypes, Handler } from '.';
+import { promises as fs } from 'fs';
+import { RepackTypes, Handler } from './types';
+
+import path = require('path');
+import got = require('got');
+import b64u = require('b64u');
+import probe = require('probe-image-size');
+import XxHash = require('xxhash');
+
+const { readFile } = fs;
 
 const gotCache = new Map();
 
@@ -67,11 +70,11 @@ export const open = async (url: string) => {
   let data: Promise<Buffer>;
   try {
     if (/^https?:/.test(url)) {
-      const { headers, body } = await got(url, { responseType: 'buffer', cache: gotCache });
+      const { headers, body } = await got.default(url, { responseType: 'buffer', cache: gotCache });
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
     } else {
-      data = fs.promises.readFile(url);
+      data = readFile(url);
       type = extMap(path.parse(url).ext.replace(/^\./, ''));
     }
   } catch (error) {

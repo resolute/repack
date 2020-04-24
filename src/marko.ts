@@ -1,14 +1,9 @@
-/* eslint-disable import/no-dynamic-require */
-import { createRequire } from 'module';
+import { Repack } from './types';
 
-import fs from 'fs';
-import path from 'path';
-import Marko from 'marko';
-
-import markoHotReload from 'marko/hot-reload.js';
-import { Repack } from '.';
-
-const require = createRequire(import.meta.url);
+import fs = require('fs');
+import path = require('path');
+import Marko = require('marko');
+import markoHotReload =require('marko/hot-reload.js');
 
 markoHotReload.enable({ silent: true });
 
@@ -23,7 +18,7 @@ const marko = (repack: Repack) => {
     async (filename: string, config: any) => {
       const outFile = rewrite(filename);
       console.debug(`… ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
-      const template = require(path.join(process.cwd(), filename));
+      const template = await import(path.join(process.cwd(), filename));
       const dirname = path.dirname(outFile);
       await fs.promises.mkdir(dirname, { recursive: true });
       const data = { ...(await config), $global: { repack } };
@@ -50,4 +45,4 @@ marko.delete = (filename) => {
   markoHotReload.handleFileModified(filename, { silent: true });
 };
 
-export default marko;
+export = marko;

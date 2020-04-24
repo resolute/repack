@@ -1,9 +1,9 @@
-import path from 'path';
-import sane from 'sane';
-import marko from './marko.js';
-import { Repack } from '.';
+import { Repack, WatchOptions } from './types';
 
-export type SaneWatcher = sane.Watcher;
+import marko = require('./marko.js');
+
+import path = require('path');
+import sane = require('sane');
 
 // const unique = (val, index, arr) => arr.indexOf(val) === index;
 // const flatten = (acc, val) => acc.concat(val);
@@ -45,10 +45,6 @@ const debounceAndAggregate = (fn: Function, threshold?: number) => {
   };
 };
 
-export interface WatchOptions {
-  ignore: (string | RegExp)[];
-}
-
 const watch = (repack: Repack, options: Partial<WatchOptions> = {}) => {
   // TODO dynamic config
   if (watcher) {
@@ -85,4 +81,4 @@ const watch = (repack: Repack, options: Partial<WatchOptions> = {}) => {
   // return watcher;
 };
 
-export default watch;
+export = watch;
