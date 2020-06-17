@@ -5,7 +5,7 @@ import { Handler } from './types';
 import autoprefixer = require('autoprefixer');
 import postcss = require('postcss');
 import postcssSorting = require('postcss-sorting');
-import cssMqpacker = require('css-mqpacker');
+import postcssCombineMediaQuery = require('postcss-combine-media-query');
 import sass = require('sass');
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
@@ -64,7 +64,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
   .then(({ css }) =>
     postcss([
       autoprefixer(),
-      cssMqpacker(),
+      postcssCombineMediaQuery(),
       postcssSorting({
         order: ['custom-properties', 'dollar-variables', 'declarations', 'rules', 'at-rules'],
         'properties-order': 'alphabetical',

@@ -3,7 +3,6 @@ import { RepackTypes, Handler } from './types';
 
 import path = require('path');
 import got = require('got');
-import b64u = require('b64u');
 import probe = require('probe-image-size');
 import XxHash = require('xxhash');
 
@@ -11,24 +10,21 @@ const { readFile } = fs;
 
 const gotCache = new Map();
 
-const bufferFromUInt32 = (number) => {
-  const buffer = Buffer.alloc(4);
-  buffer.writeUInt32BE(number, 0);
-  return buffer;
-};
-
 export const xxhash = (data: Buffer) => {
   const buffer = typeof data === 'string' ? Buffer.from(data) : data;
   if (!buffer || !buffer.length) {
     throw new Error('empty/falsey data passed to be hashed');
   }
-  const int32 = XxHash.hash(buffer, 0);
-  // base64 character length:
-  //    4*(n/3) chars to represent n bytes
-  // and for a 4 byte (UInt32), that would be 5.333 chars,
-  // which we’ll truncate to 5 chars to avoid padding:
-  // @ts-ignore
-  return b64u.encode(bufferFromUInt32(int32)).slice(0, 5);
+  return (XxHash.hash64(buffer, 0, 'base64') as string)
+    // b64u:
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    // base64 character length:
+    //    4*(n/3) chars to represent n bytes
+    // and for a 8 byte integer, that would be 10.6667 chars,
+    // which we’ll truncate to 5 chars to avoid padding:
+    .slice(0, 5);
 };
 
 export const mimeToType = (mime?: string) => {
