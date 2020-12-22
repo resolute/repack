@@ -1,6 +1,7 @@
+// eslint-disable-next-line import/order
+import { Handler } from './types';
 import { dirname } from 'path';
 import { promisify } from 'util';
-import { Handler } from './types';
 
 import autoprefixer = require('autoprefixer');
 import postcss = require('postcss');
@@ -62,6 +63,7 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
 })
   // .catch(logError)
   .then(({ css }) =>
+    // @ts-ignore
     postcss([
       autoprefixer(),
       postcssCombineMediaQuery(),

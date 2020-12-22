@@ -1,69 +1,13 @@
+/* eslint-disable import/first */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-underscore-dangle */
 import { promises as fs } from 'fs';
+import path = require('path');
 import { open, xxhash, dimensions } from './util.js';
 import { RepackTypes } from './types';
 
-import path = require('path');
-
 const { mkdir, writeFile } = fs;
-
-export type AssetFromCache = Pick<Asset, 'source' | 'hash'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
-export type AssetFromFresh = Pick<Asset, 'source'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
-export interface AssetInitializer {
-  (input: AssetFromCache | AssetFromFresh): Promise<Asset>;
-}
-
-export interface VariantFactory {
-  (config: VariantConfig): VariantInitializer;
-}
-
-export interface VariantConfig {
-  destDir: Variant['destDir'];
-  baseUri: Variant['baseUri'];
-}
-
-export type VariantFromCache = Pick<Variant, 'source' | 'variant' | 'hash'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
-export type VariantFromFresh = Pick<Variant, 'source' | 'variant' | 'data'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
-export interface VariantInitializer {
-  (input: VariantFromCache | VariantFromFresh): Promise<Variant>;
-}
-
-const isFromCache = <T extends VariantFromCache | AssetFromCache>(input: any): input is T => {
-  if ('hash' in input && typeof input.hash !== 'undefined') {
-    return true;
-  }
-  return false;
-};
-
-export const asset: AssetInitializer = async (input) => {
-  if (isFromCache(input)) {
-    return new Asset(input);
-  }
-  return new Asset({ source: input.source, ...await open(input.source) });
-};
-
-export const variant: VariantFactory = (config) => async (input) => {
-  if (isFromCache(input)) {
-    return new Variant({ ...config, ...input });
-  }
-  const data = Buffer.from(await input.data);
-  let hash;
-  try {
-    hash = xxhash(data);
-  } catch (error) {
-    console.debug('EMPTY DATA');
-    console.dir(input);
-    throw error;
-  }
-  const result = new Variant({
-    ...config, ...input, hash, ...dimensions(data, input.type),
-  });
-  await mkdir(config.destDir, { recursive: true });
-  await writeFile(result.localFilePath, await result.data);
-  return result;
-};
 
 export class Asset {
   public source: string; // url or filename
@@ -156,3 +100,59 @@ export class Variant extends Asset {
     };
   }
 }
+
+export type AssetFromCache = Pick<Asset, 'source' | 'hash'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
+export type AssetFromFresh = Pick<Asset, 'source'> & Partial<Pick<Asset, 'type' | 'width' | 'height'>>;
+export interface AssetInitializer {
+  (input: AssetFromCache | AssetFromFresh): Promise<Asset>;
+}
+
+export interface VariantConfig {
+  destDir: Variant['destDir'];
+  baseUri: Variant['baseUri'];
+}
+
+export type VariantFromCache = Pick<Variant, 'source' | 'variant' | 'hash'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
+export type VariantFromFresh = Pick<Variant, 'source' | 'variant' | 'data'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
+export interface VariantInitializer {
+  (input: VariantFromCache | VariantFromFresh): Promise<Variant>;
+}
+
+export interface VariantFactory {
+  (config: VariantConfig): VariantInitializer;
+}
+
+const isFromCache = <T extends VariantFromCache | AssetFromCache>(input: any): input is T => {
+  if ('hash' in input && typeof input.hash !== 'undefined') {
+    return true;
+  }
+  return false;
+};
+
+export const asset: AssetInitializer = async (input) => {
+  if (isFromCache(input)) {
+    return new Asset(input);
+  }
+  return new Asset({ source: input.source, ...await open(input.source) });
+};
+
+export const variant: VariantFactory = (config) => async (input) => {
+  if (isFromCache(input)) {
+    return new Variant({ ...config, ...input });
+  }
+  const data = Buffer.from(await input.data);
+  let hash;
+  try {
+    hash = xxhash(data);
+  } catch (error) {
+    console.debug('EMPTY DATA');
+    console.dir(input);
+    throw error;
+  }
+  const result = new Variant({
+    ...config, ...input, hash, ...(await dimensions(data, input.type)),
+  });
+  await mkdir(config.destDir, { recursive: true });
+  await writeFile(result.localFilePath, await result.data);
+  return result;
+};

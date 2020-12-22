@@ -1,3 +1,4 @@
+/* eslint-disable import/order */
 import { promises as fs } from 'fs';
 import { RepackTypes, Handler } from './types';
 
@@ -5,6 +6,7 @@ import path = require('path');
 import got = require('got');
 import probe = require('probe-image-size');
 import XxHash = require('xxhash');
+import sharp = require('sharp');
 
 const { readFile } = fs;
 
@@ -36,6 +38,7 @@ export const mimeToType = (mime?: string) => {
     case 'image/jpeg': return 'jpg';
     case 'image/png': return 'png';
     case 'image/svg+xml': return 'svg';
+    case 'video/mp4': return 'mp4';
     default: return undefined;
   }
 };
@@ -53,9 +56,13 @@ export const match = (needle: string) => (haystack: string) => {
   return false;
 };
 
-export const dimensions = (data: Buffer, type?: RepackTypes) => {
+export const dimensions = async (data: Buffer, type?: RepackTypes) => {
   if (['svg', 'jpg', 'png', 'webp', 'gif'].indexOf(type as string) !== -1) {
     const { width, height } = probe.sync(data) as { width: number, height: number };
+    return { width, height };
+  }
+  if (['avif'].indexOf(type as string) !== -1) {
+    const { width, height } = await sharp(data).metadata();
     return { width, height };
   }
   return {};
@@ -70,6 +77,8 @@ export const open = async (url: string) => {
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
     } else {
+      // THIS IS NOT GOOD: IF WE ENCOUNTER AN ERROR, THEN IT’S UNHANDLED AND
+      // THROWS AN UNCAUGHT EXCEPTION ERROR...NO NO NO NO REDO
       data = readFile(url);
       type = extMap(path.parse(url).ext.replace(/^\./, ''));
     }
@@ -80,11 +89,11 @@ export const open = async (url: string) => {
   const hash = xxhash(await data);
 
   return {
-    data, hash, type, ...dimensions(await data, type),
+    data, hash, type, ...(await dimensions(await data, type)),
   };
 };
 
-export const doNothing: Handler = (repack) => async (asset) => {
+export const doNothing: Handler = (/* repack */) => async (asset) => {
   if (asset.data) {
     return asset.data;
   }

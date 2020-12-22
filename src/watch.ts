@@ -1,9 +1,10 @@
+import path = require('path');
+import sane = require('sane');
+
+// eslint-disable-next-line import/first
 import { Repack, WatchOptions } from './types';
 
 import marko = require('./marko.js');
-
-import path = require('path');
-import sane = require('sane');
 
 // const unique = (val, index, arr) => arr.indexOf(val) === index;
 // const flatten = (acc, val) => acc.concat(val);

@@ -3,8 +3,8 @@
   "version": "0.1.2",
   "description": "Static site generator with asset optimization and versioning.",
   "bin": {
-    "repack": "./cli.js",
-    "compress": "./compress.js"
+    "repack": "cli.js",
+    "compress": "compress.js"
   },
   "main": "./",
   "types": "./",
@@ -47,11 +47,10 @@
     "imagemin-webp": "*",
     "marko": "*",
     "node-zopfli": "*",
-    "sass": "*",
     "p-map": "*",
     "postcss": "*",
-    "postcss-sorting": "*",
     "postcss-combine-media-query": "*",
+    "postcss-sorting": "*",
     "probe-image-size": "*",
     "rollup": "*",
     "rollup-plugin-babel": "*",
@@ -61,6 +60,7 @@
     "rollup-plugin-sourcemaps": "*",
     "rollup-plugin-typescript": "*",
     "sane": "*",
+    "sass": "*",
     "sharp": "*",
     "svgo": "*",
     "terser": "^4.8.0",
@@ -78,9 +78,9 @@
     "@types/imagemin-webp": "*",
     "@types/marko": "*",
     "@types/node": "*",
-    "@types/sass": "*",
     "@types/rollup-plugin-json": "*",
     "@types/sane": "*",
+    "@types/sass": "*",
     "@types/sharp": "*",
     "@types/svgo": "*",
     "@typescript-eslint/eslint-plugin": "*",
@@ -97,55 +97,8 @@
     "build tool",
     "minify"
   ],
-  "prettier": {
-    "endOfLine": "lf",
-    "singleQuote": true
-  },
   "publishConfig": {
     "access": "public"
-  },
-  "eslintConfig": {
-    "env": {
-      "commonjs": true,
-      "es6": true,
-      "node": true
-    },
-    "extends": [
-      "airbnb-base"
-    ],
-    "globals": {
-      "Atomics": "readonly",
-      "SharedArrayBuffer": "readonly"
-    },
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2018
-    },
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "rules": {
-      "implicit-arrow-linebreak": "off",
-      "import/no-unresolved": "off",
-      "lines-between-class-members": "off",
-      "no-bitwise": "off",
-      "no-plusplus": "off",
-      "no-shadow": "off",
-      "no-unused-vars": "off",
-      "no-use-before-define": "off",
-      "operator-linebreak": "off",
-      "import/extensions": "off",
-      "spaced-comment": [
-        "error",
-        "always",
-        {
-          "exceptions": [
-            "-",
-            "+"
-          ]
-        }
-      ]
-    }
   },
   "license": "ISC"
 }

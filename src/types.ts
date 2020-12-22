@@ -1,8 +1,8 @@
 import { Asset, Variant } from './variant.js';
+// eslint-disable-next-line import/order
+import glob = require('fast-glob');
 
 import marko = require('./marko.js');
-
-import glob = require('fast-glob');
 
 export interface Database {
   [slug: string]: Promise<(Asset | Variant)>;
@@ -12,7 +12,17 @@ export interface WatchOptions {
   ignore: (string | RegExp)[];
 }
 
-export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'gif' | 'woff2' | 'woff';
+export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'avif' | 'gif' | 'mp4' | 'woff2' | 'woff';
+
+export interface Repack {
+  (source: string, variantOptions?: any): Promise<Variant>;
+  run: () => Promise<void>;
+  all: () => Database;
+  delete: (filename: string) => Promise<void>;
+  watch: () => void;
+  // eslint-disable-next-line no-use-before-define
+  options: RepackOptions;
+}
 
 export interface Handler {
   (repack: Repack): (asset: Asset, varientOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
@@ -28,15 +38,6 @@ export interface RunOptions {
   marko: ReturnType<typeof marko>;
   glob: typeof glob;
   repack: Repack;
-}
-
-export interface Repack {
-  (source: string, variantOptions?: any): Promise<Variant>;
-  run: () => Promise<void>;
-  all: () => Database;
-  delete: (filename: string) => Promise<void>;
-  watch: () => void;
-  options: RepackOptions;
 }
 
 export interface RepackOptions {

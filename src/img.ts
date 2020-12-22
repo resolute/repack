@@ -1,5 +1,5 @@
+// eslint-disable-next-line import/order
 import { Handler } from './types';
-
 import sharp = require('sharp');
 import imagemin = require('imagemin');
 import imageminJpegtran = require('imagemin-jpegtran');
@@ -15,10 +15,9 @@ const isFinite = (num: any): num is number => {
 };
 
 const normalizeDimensions = (original: any = {}, target: any = {}) => {
-  const { width: targetWidth, height: targetHeight, ...nonWidthHeightOptions } = target;
   if (isFinite(target.width) && isFinite(target.height)) {
     if (target.width <= original.width && target.height <= original.height) {
-      return { width: target.width, height: target.height, ...nonWidthHeightOptions };
+      return target;
     }
     const targetAspect = target.width / target.height;
     const originalAspect = original.width / original.height;
@@ -33,9 +32,9 @@ const normalizeDimensions = (original: any = {}, target: any = {}) => {
       resolvedHeight = Math.floor(original.width / targetAspect);
     }
     return {
+      ...target,
       width: resolvedWidth,
       height: resolvedHeight,
-      ...nonWidthHeightOptions,
     };
   }
   let width: number;
@@ -105,6 +104,10 @@ const img: Handler = (repack) => async (input, variant) => {
           imageminWebp(),
         ],
       });
+      break;
+    case 'avif':
+      type = 'avif';
+      data = Promise.resolve(buffer);
       break;
     default:
       data = Promise.resolve(buffer);

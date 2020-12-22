@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/order
 import { Repack } from './types';
 
 import fs = require('fs');
@@ -11,7 +12,6 @@ const defaultRewrite = (path: string) => path.replace(/^.*?tpl\//, 'web/html/').
 
 const trimDirectoryPrefix = (str: string) =>
   str.replace(/^.*?tpl\//, '').replace(/^.*?web\/html\//, '');
-
 
 const marko = (repack: Repack) => {
   const marko = ({ rewrite = defaultRewrite } = {}) =>

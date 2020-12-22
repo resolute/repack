@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/order
 import { Handler } from './types';
 
 import rollup = require('rollup');
@@ -8,7 +9,7 @@ import json = require('rollup-plugin-json');
 import typescript = require('rollup-plugin-typescript');
 import terser = require('terser');
 
-const js: Handler = (repack) => async ({ source: input }, variant) => {
+const js: Handler = (/* repack */) => async ({ source: input }, variant) => {
   // TODO figure out how to do variants
   const legacy = variant === 'legacy';
   // console.log(`legacy ${legacy}`);

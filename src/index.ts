@@ -1,3 +1,4 @@
+/* eslint-disable import/order */
 /* eslint-disable no-restricted-syntax */
 import { promises as fs } from 'fs';
 import { debuglog } from 'util';
@@ -6,6 +7,7 @@ import {
   asset, variant, Asset, Variant,
 } from './variant.js';
 import { match, doNothing } from './util.js';
+import tsNode = require('ts-node');
 
 import svg = require('./svg.js');
 import js = require('./js.js');
@@ -13,7 +15,6 @@ import css = require('./css.js');
 import img = require('./img.js');
 import marko = require('./marko.js');
 import watch = require('./watch.js');
-import tsNode = require('ts-node');
 import glob = require('fast-glob');
 
 process.title = 'repack';
@@ -45,7 +46,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
-      [['jpg', 'png', 'webp', 'gif'], img],
+      [['jpg', 'png', 'webp', 'gif', 'avif'], img],
       [['svg'], svg],
       [['css'], css],
       [['js'], js],
