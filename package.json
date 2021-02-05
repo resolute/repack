@@ -45,7 +45,7 @@
     "imagemin-mozjpeg": "*",
     "imagemin-pngquant": "^8.0.0",
     "imagemin-webp": "*",
-    "marko": "*",
+    "marko": "~4",
     "node-zopfli": "*",
     "p-map": "*",
     "postcss": "*",

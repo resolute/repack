@@ -80,6 +80,7 @@ const img = (asset) => async (input, variant: VariantOptions) => {
   }
   // TODO test for valid formats
   // if (targetFormat) {
+  // @ts-ignore
   image = image.toFormat(targetFormat || originalFormat!, outputOptions);
   // }
   buffer = await image.toBuffer();
