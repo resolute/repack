@@ -62,7 +62,7 @@
     "sane": "*",
     "sass": "*",
     "sharp": "*",
-    "svgo": "*",
+    "svgo": "~1",
     "terser": "^4.8.0",
     "ts-node": "*",
     "tslib": "*",
