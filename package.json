@@ -82,7 +82,7 @@
     "@types/sane": "*",
     "@types/sass": "*",
     "@types/sharp": "*",
-    "@types/svgo": "*",
+    "@types/svgo": "~1",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
     "del-cli": "*",

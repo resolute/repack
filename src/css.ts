@@ -19,7 +19,7 @@ const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '<': '%3C',
   '>': '%3E',
   '|': '%7C',
-}[i]));
+}[i])!);
 
 const sassRender = promisify(sass.render);
 
