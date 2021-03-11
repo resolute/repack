@@ -4,8 +4,8 @@ import sharp = require('sharp');
 import imagemin = require('imagemin');
 import imageminJpegtran = require('imagemin-jpegtran');
 import imageminMozjpeg = require('imagemin-mozjpeg');
-import imageminPngquant = require('imagemin-pngquant');
-import imageminWebp = require('imagemin-webp');
+// import imageminPngquant = require('imagemin-pngquant');
+// import imageminWebp = require('imagemin-webp');
 
 const isFinite = (num: any): num is number => {
   if (!Number.isNaN(num) && Number.isFinite(num)) {
@@ -67,7 +67,17 @@ const img: Handler = (repack) => async (input, variant) => {
   }
   // TODO test for valid formats
   if (targetFormat) {
-    image = image.toFormat(targetFormat);
+    switch (targetFormat) {
+      case 'avif':
+        image = image.toFormat(targetFormat, { quality: 70 });
+        break;
+      case 'webp':
+        image = image.toFormat(targetFormat, { quality: 85 /* , smartSubsample: true */ });
+        break;
+      default:
+        image = image.toFormat(targetFormat);
+        break;
+    }
   }
   let { type } = input;
   // console.debug(`repack.options.dev = ${repack.options.dev}`);
@@ -90,20 +100,22 @@ const img: Handler = (repack) => async (input, variant) => {
       break;
     case 'png':
       type = 'png';
-      data = imagemin.buffer(buffer, {
-        plugins: [
-          (imageminPngquant.default || imageminPngquant)({
-            quality: [0.6, 0.8],
-          })],
-      });
+      data = Promise.resolve(buffer);
+      // data = imagemin.buffer(buffer, {
+      //   plugins: [
+      //     (imageminPngquant.default || imageminPngquant)({
+      //       quality: [0.6, 0.8],
+      //     })],
+      // });
       break;
     case 'webp':
       type = 'webp';
-      data = imagemin.buffer(buffer, {
-        plugins: [
-          imageminWebp(),
-        ],
-      });
+      data = Promise.resolve(buffer);
+      // data = imagemin.buffer(buffer, {
+      //   plugins: [
+      //     imageminWebp(),
+      //   ],
+      // });
       break;
     case 'avif':
       type = 'avif';
