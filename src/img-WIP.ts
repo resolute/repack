@@ -4,29 +4,29 @@ import sharp = require('sharp');
 import imagemin = require('imagemin');
 import imageminJpegtran = require('imagemin-jpegtran');
 import imageminMozjpeg = require('imagemin-mozjpeg');
-import imageminPngquant = require('imagemin-pngquant');
-import imageminWebp = require('imagemin-webp');
+// import imageminPngquant = require('imagemin-pngquant');
+// import imageminWebp = require('imagemin-webp');
 
 type VariantOptions = { format?: string } & sharp.ResizeOptions & (sharp.OutputOptions
   | sharp.JpegOptions | sharp.PngOptions
   | sharp.WebpOptions | sharp.TiffOptions);
 
-const normalizeDimensions = (options: any = {}) => {
-  let width: number;
-  let height: number;
-  // eslint-disable-next-line prefer-const
-  let { width: w, height: h, ...other } = options;
-  w = Number(w);
-  h = Number(h);
-  if (!Number.isNaN(w) && Number.isFinite(w)) {
-    width = w;
-  }
-  if (!Number.isNaN(h) && Number.isFinite(h)) {
-    height = h;
-  }
-  // @ts-ignore
-  return { width, height, ...other };
-};
+// const normalizeDimensions = (options: any = {}) => {
+//   let width: number;
+//   let height: number;
+//   // eslint-disable-next-line prefer-const
+//   let { width: w, height: h, ...other } = options;
+//   w = Number(w);
+//   h = Number(h);
+//   if (!Number.isNaN(w) && Number.isFinite(w)) {
+//     width = w;
+//   }
+//   if (!Number.isNaN(h) && Number.isFinite(h)) {
+//     height = h;
+//   }
+//   // @ts-ignore
+//   return { width, height, ...other };
+// };
 
 const separateOptions = (options: VariantOptions = {}) => {
   const {
@@ -97,20 +97,20 @@ const img = (asset) => async (input, variant: VariantOptions) => {
       break;
     case 'png':
       ext = '.png';
-      buffer = await imagemin.buffer(buffer, {
-        plugins: [
-          (imageminPngquant.default || imageminPngquant)({
-            quality: [0.6, 0.8],
-          })],
-      });
+      // buffer = await imagemin.buffer(buffer, {
+      //   plugins: [
+      //     (imageminPngquant.default || imageminPngquant)({
+      //       quality: [0.6, 0.8],
+      //     })],
+      // });
       break;
     case 'webp':
       ext = '.webp';
-      buffer = await imagemin.buffer(buffer, {
-        plugins: [
-          imageminWebp(),
-        ],
-      });
+      // buffer = await imagemin.buffer(buffer, {
+      //   plugins: [
+      //     imageminWebp(),
+      //   ],
+      // });
       break;
     case 'tiff': ext = '.tiff'; break;
     case 'heif': ext = '.heif'; break;
