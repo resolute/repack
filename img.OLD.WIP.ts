@@ -1,11 +1,11 @@
-import fs = require('fs');
-import probe = require('probe-image-size');
-import sharp = require('sharp');
-import imagemin = require('imagemin');
-import imageminJpegtran = require('imagemin-jpegtran');
-import imageminMozjpeg = require('imagemin-mozjpeg');
-// import imageminPngquant = require('imagemin-pngquant');
-// import imageminWebp = require('imagemin-webp');
+import fs from 'fs';
+import probe from 'probe-image-size';
+import sharp from 'sharp';
+import imagemin from 'imagemin';
+import imageminJpegtran from 'imagemin-jpegtran';
+import imageminMozjpeg from 'imagemin-mozjpeg';
+// import imageminPngquant from 'imagemin-pngquant';
+// import imageminWebp from 'imagemin-webp';
 
 type VariantOptions = { format?: string } & sharp.ResizeOptions & (sharp.OutputOptions
   | sharp.JpegOptions | sharp.PngOptions
@@ -121,4 +121,4 @@ const img = (asset) => async (input, variant: VariantOptions) => {
   };
 };
 
-export = img;
+export default img;

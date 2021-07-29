@@ -3,11 +3,13 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-underscore-dangle */
 import { promises as fs } from 'fs';
-import path = require('path');
-import { open, xxhash, dimensions } from './util.js';
-import { RepackTypes } from './types';
+import path from 'path';
+import { open, xxhash, dimensions as getDimensions } from './util.js';
+import { RepackTypes } from './types.js';
 
-const { mkdir, writeFile } = fs;
+const {
+  mkdir, writeFile, access, link: hardlink,
+} = fs;
 
 export class Asset {
   public source: string; // url or filename
@@ -115,7 +117,7 @@ export interface VariantConfig {
 export type VariantFromCache = Pick<Variant, 'source' | 'variant' | 'hash'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
 export type VariantFromFresh = Pick<Variant, 'source' | 'variant' | 'data'> & Partial<Pick<Variant, 'type' | 'width' | 'height'>>;
 export interface VariantInitializer {
-  (input: VariantFromCache | VariantFromFresh): Promise<Variant>;
+  (input: (VariantFromCache | VariantFromFresh) & { filename?: string }): Promise<Variant>;
 }
 
 export interface VariantFactory {
@@ -138,6 +140,19 @@ export const asset: AssetInitializer = async (input) => {
 
 export const variant: VariantFactory = (config) => async (input) => {
   if (isFromCache(input)) {
+    if (typeof input.filename === 'string') {
+      const hash = input.hash.slice(0, 5);
+      const result = new Variant({
+        ...config, ...input, hash,
+      });
+      try {
+        await access(result.localFilePath);
+      } catch (error) {
+        await mkdir(config.destDir, { recursive: true });
+        await hardlink(input.filename, result.localFilePath).catch(() => { });
+      }
+      return result;
+    }
     return new Variant({ ...config, ...input });
   }
   const data = Buffer.from(await input.data);
@@ -145,12 +160,17 @@ export const variant: VariantFactory = (config) => async (input) => {
   try {
     hash = xxhash(data);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.debug('EMPTY DATA');
+    // eslint-disable-next-line no-console
     console.dir(input);
     throw error;
   }
+  const dimensions = input.width && input.height
+    ? { width: input.width, height: input.height }
+    : await getDimensions(data, input.type);
   const result = new Variant({
-    ...config, ...input, hash, ...(await dimensions(data, input.type)),
+    ...config, ...input, hash, ...dimensions,
   });
   await mkdir(config.destDir, { recursive: true });
   await writeFile(result.localFilePath, await result.data);

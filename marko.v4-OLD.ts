@@ -1,10 +1,10 @@
 // eslint-disable-next-line import/order
-import { Repack } from './types';
+import { Repack } from './types.js';
 
-import fs = require('fs');
-import path = require('path');
-import Marko = require('marko');
-import markoHotReload =require('marko/hot-reload.js');
+import fs from 'fs/promises';
+import path from 'path';
+import Marko from 'marko';
+import markoHotReload from 'marko/hot-reload.js';
 
 markoHotReload.enable({ silent: true });
 
@@ -20,9 +20,9 @@ const marko = (repack: Repack) => {
       console.debug(`… ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
       const template = await import(path.join(process.cwd(), filename));
       const dirname = path.dirname(outFile);
-      await fs.promises.mkdir(dirname, { recursive: true });
+      await fs.mkdir(dirname, { recursive: true });
       const data = { ...(await config), $global: { repack } };
-      await fs.promises.writeFile(outFile, (await template.render(data)).getOutput());
+      await fs.writeFile(outFile, (await template.render(data)).getOutput());
       console.debug(`✓ ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
     };
   marko.render = (markup: string, data: any) => {
@@ -45,4 +45,4 @@ marko.delete = (filename) => {
   markoHotReload.handleFileModified(filename, { silent: true });
 };
 
-export = marko;
+export default marko;

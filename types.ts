@@ -1,8 +1,8 @@
 import { Asset, Variant } from './variant.js';
 // eslint-disable-next-line import/order
-import glob = require('fast-glob');
+import glob from 'fast-glob';
 
-import marko = require('./marko.js');
+import marko from './marko.js';
 
 export interface Database {
   [slug: string]: Promise<(Asset | Variant)>;
@@ -12,7 +12,7 @@ export interface WatchOptions {
   ignore: (string | RegExp)[];
 }
 
-export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'avif' | 'gif' | 'mp4' | 'woff2' | 'woff';
+export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'avif' | 'gif' | 'mp4' | 'woff2' | 'woff' | 'pdf';
 
 export interface Repack {
   (source: string, variantOptions?: any): Promise<Variant>;

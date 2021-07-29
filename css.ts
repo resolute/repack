@@ -1,13 +1,13 @@
 // eslint-disable-next-line import/order
-import { Handler } from './types';
+import { Handler } from './types.js';
 import { dirname } from 'path';
 import { promisify } from 'util';
 
-import autoprefixer = require('autoprefixer');
-import postcss = require('postcss');
-import postcssSorting = require('postcss-sorting');
-import postcssCombineMediaQuery = require('postcss-combine-media-query');
-import sass = require('sass');
+import autoprefixer from 'autoprefixer';
+import postcss from 'postcss';
+import postcssSorting from 'postcss-sorting';
+import postcssCombineMediaQuery from 'postcss-combine-media-query';
+import sass from 'sass';
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '"': '\'',
@@ -77,4 +77,4 @@ const css: Handler = (repack) => async ({ source: file }) => sassRender({
   // remove any left over newlines
   .then(({ css }) => Buffer.from(css.toString().replace(/\n/g, '')));
 
-export = css;
+export default css;

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-undef */
 import { promises as fs, createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
@@ -7,10 +8,10 @@ import {
   createBrotliCompress, createBrotliDecompress, createGunzip,
 } from 'zlib';
 
-import pMap = require('p-map');
-import zopfli = require('node-zopfli');
-import glob = require('fast-glob');
-import xxhash = require('xxhash');
+import pMap from 'p-map';
+import zopfli from 'node-zopfli';
+import glob from 'fast-glob';
+import xxhash from 'xxhash';
 
 const { stat, utimes, unlink } = fs;
 
@@ -22,7 +23,9 @@ const extensions = ['js', 'html', 'css', 'json', 'xml', 'csv', 'eot', 'svg', 'tt
 const globPatterns = extensions.map((extension) => `${root}/**/*.${extension}`);
 
 const hasher = async (
-  readStream: NodeJS.ReadableStream, ...rwStreams: NodeJS.ReadWriteStream[]) => {
+  readStream: NodeJS.ReadableStream,
+  ...rwStreams: NodeJS.ReadWriteStream[]
+) => {
   const hashStream = new xxhash.Stream(0) as NodeJS.WritableStream;
   // @ts-ignore
   await pipe(readStream, ...rwStreams, hashStream);

@@ -1,15 +1,55 @@
 {
   "eslint.alwaysShowStatus": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "editor.tabSize": 2,
   "files.insertFinalNewline": true,
   "files.exclude": {
-    "**/*.d.ts": true,
-    "**/*.js": true,
-    "**/*.js.map": true,
+    "node_modules": true,
     "**/*.marko.js": true,
-    "node_modules": true
+    "**/*.d.ts": true,
+    "**/*.js.map": true,
+    "**/*.js": true
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
+  },
+  "marko.beautify.syntax": "concise",
+  "marko.beautify.indent": "  ",
+  "editor.formatOnSave": false,
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[marko]": {
+    "editor.formatOnSave": true
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true
   }
 }

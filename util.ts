@@ -1,12 +1,12 @@
 /* eslint-disable import/order */
 import { promises as fs } from 'fs';
-import { RepackTypes, Handler } from './types';
+import { RepackTypes, Handler } from './types.js';
 
-import path = require('path');
-import got = require('got');
-import probe = require('probe-image-size');
-import XxHash = require('xxhash');
-import sharp = require('sharp');
+import path from 'path';
+import got from 'got';
+import probe from 'probe-image-size';
+import XxHash from 'xxhash';
+import sharp from 'sharp';
 
 const { readFile } = fs;
 
@@ -73,16 +73,17 @@ export const open = async (url: string) => {
   let data: Promise<Buffer>;
   try {
     if (/^https?:/.test(url)) {
-      const { headers, body } = await got.default(url, { responseType: 'buffer', cache: gotCache });
+      const { headers, body } = await got(url, { responseType: 'buffer', cache: gotCache });
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
     } else {
       // THIS IS NOT GOOD: IF WE ENCOUNTER AN ERROR, THEN IT’S UNHANDLED AND
       // THROWS AN UNCAUGHT EXCEPTION ERROR...NO NO NO NO REDO
-      data = readFile(url);
+      data = Promise.resolve(await readFile(url));
       type = extMap(path.parse(url).ext.replace(/^\./, ''));
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error(`FATAL: error trying to open “${url}”`);
     throw error;
   }
@@ -93,9 +94,72 @@ export const open = async (url: string) => {
   };
 };
 
+// export const stream = (url: string) => {
+//   let type: RepackTypes | undefined;
+//   let data: Promise<Buffer>;
+//   try {
+//     if (/^https?:/.test(url)) {
+//       const gotStream = got(url, { isStream: true });
+//       gotStream.on('response', (response) => {
+//         type = mimeToType(response.headers['content-type']);
+//       });
+//       data = Promise.resolve(body);
+//     } else {
+//       // THIS IS NOT GOOD: IF WE ENCOUNTER AN ERROR, THEN IT’S UNHANDLED AND
+//       // THROWS AN UNCAUGHT EXCEPTION ERROR...NO NO NO NO REDO
+//       data = readFile(url);
+//       type = extMap(path.parse(url).ext.replace(/^\./, ''));
+//     }
+//   } catch (error) {
+//     console.error(`FATAL: error trying to open “${url}”`);
+//     throw error;
+//   }
+//   const hash = xxhash(await data);
+
+//   return {
+//     data, hash, type, ...(await dimensions(await data, type)),
+//   };
+// };
+
 export const doNothing: Handler = (/* repack */) => async (asset) => {
   if (asset.data) {
     return asset.data;
   }
   return open(asset.source);
+};
+
+/**
+ * debounce: Returns a function, that, as long as it continues to be
+ * invoked (.), will not be triggered (*).  The function will be called
+ * after it stops being called for `threshold` milliseconds.  If
+ * `immediate` is passed, trigger the function on the leading edge,
+ * instead of the trailing.
+ *
+ *       /-- 10s --\ /-- 10s --\ /-- 10s --\
+ *     (*). . . . . . . . . . . .           *
+ *
+ * @param   function    fn          Function to be throttled
+ * @param   number      threshold   Milliseconds fn will be throttled
+ *
+ * @return  function    Debounce'd function `fn`
+ */
+
+export const debounceAndAggregate = <T extends (...args: any[]) => any>
+  (fn: T, threshold?: number) => {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  let aggregateArgs: Parameters<T>[0][0][] = [];
+
+  return (...args: Parameters<T>[0][0]) => {
+    aggregateArgs.push(args);
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      timeout = undefined;
+      fn.call(undefined, aggregateArgs);
+      aggregateArgs = [];
+    }, threshold);
+  };
 };

@@ -1,11 +1,11 @@
 // eslint-disable-next-line import/order
+import sharp from 'sharp';
 import { Handler } from './types';
-import sharp = require('sharp');
-import imagemin = require('imagemin');
-import imageminJpegtran = require('imagemin-jpegtran');
-import imageminMozjpeg = require('imagemin-mozjpeg');
-// import imageminPngquant = require('imagemin-pngquant');
-// import imageminWebp = require('imagemin-webp');
+// import imagemin from 'imagemin';
+// import imageminJpegtran from 'imagemin-jpegtran';
+// import imageminMozjpeg from 'imagemin-mozjpeg';
+// import imageminPngquant from 'imagemin-pngquant';
+// import imageminWebp from 'imagemin-webp';
 
 const isFinite = (num: any): num is number => {
   if (!Number.isNaN(num) && Number.isFinite(num)) {
@@ -91,12 +91,13 @@ const img: Handler = (repack) => async (input, variant) => {
     case 'jpeg':
     case 'jpg':
       type = 'jpg';
-      data = imagemin.buffer(buffer, {
-        plugins: [
-          imageminJpegtran(),
-          imageminMozjpeg(),
-        ],
-      });
+      data = Promise.resolve(buffer);
+      // data = imagemin.buffer(buffer, {
+      //   plugins: [
+      //     imageminJpegtran(),
+      //     imageminMozjpeg(),
+      //   ],
+      // });
       break;
     case 'png':
       type = 'png';
@@ -128,4 +129,4 @@ const img: Handler = (repack) => async (input, variant) => {
   return { type, data };
 };
 
-export = img;
+export default img;

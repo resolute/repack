@@ -1,26 +1,39 @@
 /* eslint-disable import/order */
 /* eslint-disable no-restricted-syntax */
-import { promises as fs } from 'fs';
+// import { promises as fs } from 'fs';
 import { debuglog } from 'util';
-import { Database, Repack, RepackOptions } from './types';
+import path from 'path';
+import glob from 'fast-glob';
+import {
+  Database, Repack, RepackOptions, RepackTypes,
+} from './types.js';
 import {
   asset, variant, Asset, Variant,
 } from './variant.js';
 import { match, doNothing } from './util.js';
-import tsNode = require('ts-node');
 
-import svg = require('./svg.js');
-import js = require('./js.js');
-import css = require('./css.js');
-import img = require('./img.js');
-import marko = require('./marko.js');
-import watch = require('./watch.js');
-import glob = require('fast-glob');
+import svg from './svg.js';
+import js from './js.js';
+import css from './css.js';
+// import img from './img.js';
+import rio from '@resolute/rio';
+import marko from './marko.js';
+import watch from './watch.js';
+import tsNode = require('ts-node');
 
 process.title = 'repack';
 
 const debug = debuglog('repack');
-const { readFile, writeFile } = fs;
+// const { readFile, writeFile } = fs;
+
+const img = () => async (asset: Asset, options: any) => {
+  const {
+    width, height, type, buffer, hash, filename,
+  } = await rio()(asset.source, { ...options, type: options.type ?? options.format });
+  return {
+    width, height, type: (type as RepackTypes), data: buffer(), hash, filename,
+  };
+};
 
 const database: Database = {};
 
@@ -30,12 +43,13 @@ if (Object.keys(require.extensions).indexOf('.ts') === -1) {
     project: `${process.cwd()}/tsconfig.json`,
     transpileOnly: true,
     compilerOptions: { module: 'commonjs' },
+    preferTsExts: true,
   });
 }
 
 const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
   try {
-    return await import(`${process.cwd()}/etc/build.ts`);
+    return await import(path.join(process.cwd(), 'etc/build'));
   } catch (error) {
     process.emitWarning(`Using default config, because unable to load user config: ${error}`, 'BuildWarning');
     return {};
@@ -50,18 +64,19 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
       [['svg'], svg],
       [['css'], css],
       [['js'], js],
-      [['woff2', 'woff'], doNothing],
+      [['woff2', 'woff', 'pdf', 'mp4'], doNothing],
     ],
     src: ['**/*', '!**/node_modules'],
     destDir: 'web/s',
     baseUri: '/s',
     dev: false,
     run: async ({ glob, marko }: any) => {
-      const configPath = `${process.cwd()}/etc/config.ts`;
+      const configPath = path.join(process.cwd(), 'etc/config');
       let config;
       try {
-        config = await import(configPath);
+        config = await import(`${configPath}`);
       } catch (error) {
+        process.emitWarning(`Unable to read “etc/config.(j|t)s”. ${error} Continuing…`);
         config = {};
       }
       const templates = await glob(['tpl/**/*.marko', '!tpl/components/**/*']);
@@ -84,38 +99,41 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
 
   const sourceGlob = glob(options.src);
 
-  const read = async (file = options.jsonFile) => {
-    try {
-      const json = JSON.parse((await readFile(file)).toString()) as {
-        [slug: string]: Asset | Variant
-      };
-      for (const [slug, payload] of Object.entries(json)) {
-        if ('variant' in payload) {
-          database[slug] = variant({ baseUri: options.baseUri, destDir: options.destDir })(payload);
-        } else {
-          database[slug] = asset(payload);
-        }
-      }
-    } catch {
-      // do nothing
-    }
-  };
+  // const read = async (file = options.jsonFile) => {
+  //   try {
+  //     const json = JSON.parse((await readFile(file)).toString()) as {
+  //       [slug: string]: Asset | Variant
+  //     };
+  //     for (const [slug, payload] of Object.entries(json)) {
+  //       if ('variant' in payload) {
+  //         database[slug] = variant({
+  //           baseUri: options.baseUri,
+  //           destDir: options.destDir,
+  //         })(payload);
+  //       } else {
+  //         database[slug] = asset(payload);
+  //       }
+  //     }
+  //   } catch {
+  //     // do nothing
+  //   }
+  // };
 
-  const save = async (file = options.jsonFile) => {
-    // TODO sort
-    await writeFile(file, JSON.stringify(
-      await (async () => {
-        const result = {};
-        for (const [key, payload] of Object.entries(database)) {
-          // eslint-disable-next-line no-await-in-loop
-          result[key] = await payload;
-        }
-        return result;
-      })(),
-      null,
-      2,
-    ));
-  };
+  // const save = async (file = options.jsonFile) => {
+  //   // TODO sort
+  //   await writeFile(file, JSON.stringify(
+  //     await (async () => {
+  //       const result = {};
+  //       for (const [key, payload] of Object.entries(database)) {
+  //         // eslint-disable-next-line no-await-in-loop
+  //         result[key] = await payload;
+  //       }
+  //       return result;
+  //     })(),
+  //     null,
+  //     2,
+  //   ));
+  // };
 
   const repack: Repack = async (source: string, variantOptions = 'generic') => {
     debug(`repack('${source}', ${variantOptions})`);
@@ -145,6 +163,10 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
 
     let data: Promise<Buffer>;
     let hash: string | undefined;
+    let filename: string | undefined;
+    let width: number | undefined;
+    let height: number | undefined;
+    let variantType: RepackTypes | undefined;
 
     if (!handler) {
       process.emitWarning(`No handler for “${source}”...treating as-is.`);
@@ -159,15 +181,24 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
         data = response.data;
         type = response.type;
         hash = response.hash;
+        // @ts-ignore
+        filename = response.filename;
+        width = response.width;
+        height = response.height;
+        variantType = response.type;
       }
     }
 
     database[variantSlug] = variant({ baseUri: options.baseUri, destDir: options.destDir })({
       source: sourceSlug,
       variant: variantOptions,
-      type,
+      // type,
       hash,
       data,
+      filename,
+      width,
+      height,
+      type: variantType ?? type,
     });
 
     return database[variantSlug] as Promise<Variant>;
@@ -192,7 +223,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
     svg: svg(repack),
     js: js(repack),
     css: css(repack),
-    img: img(repack),
+    img: img(),
     marko: marko(repack),
     glob,
     repack,
@@ -202,12 +233,12 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
 
   repack.options = options;
 
-  read(options.jsonFile);
+  // read(options.jsonFile);
 
-  process.on('beforeExit', async () => {
-    await save();
-    process.exit();
-  });
+  // process.on('beforeExit', async () => {
+  //   await save();
+  //   process.exit();
+  // });
 
   return repack;
 };
@@ -217,4 +248,4 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
 //     .map(([key, val]) => `${key}: ${(~~(val / 1024 / 1024)).toLocaleString()} mb`).join('\t'));
 // }, 1000).unref();
 
-export = repack;
+export default repack;
