@@ -1,6 +1,6 @@
 {
   "name": "@resolute/repack",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Static site generator with asset optimization and versioning.",
   "bin": {
     "repack": "cli.js",
