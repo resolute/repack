@@ -32,7 +32,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@resolute/rio": "^0.0.1",
+    "@resolute/rio": "^0.0.2",
     "autoprefixer": "^10.3.1",
     "esbuild": "^0.12.16",
     "fast-glob": "^3.2.7",
