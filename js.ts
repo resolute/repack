@@ -8,9 +8,12 @@ const js: Handler = (/* repack */) => async ({ source: input }) => {
     entryPoints: [input],
     bundle: true,
     write: false,
+    target: ['chrome72', 'safari13'],
+    format: 'esm',
   });
   const bundle = result.outputFiles[0].text;
-  const { code: minified } = await minify(bundle, {
+  const prefix = 'const window = self; const document = window.document;\n';
+  const { code: minified } = await minify(`${prefix}${bundle}`, {
     toplevel: true,
     compress: { toplevel: true, hoist_props: true, passes: 4 },
     mangle: { toplevel: true },
