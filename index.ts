@@ -1,10 +1,7 @@
-/* eslint-disable import/order */
-/* eslint-disable no-restricted-syntax */
-// import { promises as fs } from 'fs';
 import { debuglog } from 'util';
 import path from 'path';
 import glob from 'fast-glob';
-import {
+import type {
   Database, Repack, RepackOptions, RepackTypes,
 } from './types.js';
 import {
@@ -15,40 +12,31 @@ import { match, doNothing } from './util.js';
 import svg from './svg.js';
 import js from './js.js';
 import css from './css.js';
-// import img from './img.js';
-import rio from '@resolute/rio';
+import img from './img.js';
 import marko from './marko.js';
 import watch from './watch.js';
-import tsNode = require('ts-node');
 
 process.title = 'repack';
 
 const debug = debuglog('repack');
 // const { readFile, writeFile } = fs;
 
-const img = () => async (asset: Asset, options: any) => {
-  const {
-    width, height, type, buffer, hash, filename,
-  } = await rio()(asset.source, { ...options, type: options.type ?? options.format });
-  return {
-    width, height, type: (type as RepackTypes), data: buffer(), hash, filename,
-  };
-};
-
 const database: Database = {};
 
-// Node.js can require() `.ts` files
-if (Object.keys(require.extensions).indexOf('.ts') === -1) {
-  tsNode.register({
-    project: `${process.cwd()}/tsconfig.json`,
-    transpileOnly: true,
-    compilerOptions: { module: 'commonjs' },
-    preferTsExts: true,
-  });
-}
+// // Node.js can require() `.ts` files
+// if (Object.keys(require.extensions).indexOf('.ts') === -1) {
+//   tsNode.register({
+//     project: `${process.cwd()}/tsconfig.json`,
+//     transpileOnly: true,
+//     compilerOptions: { module: 'esnext' },
+//     preferTsExts: true,
+//   });
+// }
 
 const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
   try {
+    // eslint-disable-next-line import/no-dynamic-require
+    // return await require(path.join(process.cwd(), 'etc/build'));
     return await import(path.join(process.cwd(), 'etc/build'));
   } catch (error) {
     process.emitWarning(`Using default config, because unable to load user config: ${error}`, 'BuildWarning');
@@ -60,7 +48,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
-      [['jpg', 'png', 'webp', 'gif', 'avif'], img],
+      [['jpg', 'png', 'webp', 'gif', 'avif', 'heif', 'jpeg'], img],
       [['svg'], svg],
       [['css'], css],
       [['js'], js],
@@ -74,14 +62,17 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
       const configPath = path.join(process.cwd(), 'etc/config');
       let config;
       try {
+        // config = await import(`${configPath}`);
+        // eslint-disable-next-line import/no-dynamic-require
+        // config = await require(`${configPath}`);
         config = await import(`${configPath}`);
       } catch (error) {
         process.emitWarning(`Unable to read “etc/config.(j|t)s”. ${error} Continuing…`);
         config = {};
       }
-      const templates = await glob(['tpl/**/*.marko', '!tpl/components/**/*']);
-      Promise.all(templates
-        .map((template: any) => marko()(template, config)));
+      for (const template of await glob(['tpl/**/*.marko', '!tpl/components/**/*'])) {
+        marko()(template, config);
+      }
     },
     watch: { ignore: [] },
     ...(await buildConfig),
@@ -223,7 +214,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
     svg: svg(repack),
     js: js(repack),
     css: css(repack),
-    img: img(),
+    img: img(repack),
     marko: marko(repack),
     glob,
     repack,

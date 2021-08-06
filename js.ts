@@ -1,7 +1,6 @@
 import { minify } from 'terser';
-import esbuild = require('esbuild');
-// eslint-disable-next-line import/first
-import { Handler } from './types.js';
+import esbuild from 'esbuild';
+import type { Handler } from './types.js';
 
 const js: Handler = (/* repack */) => async ({ source: input }) => {
   const result = await esbuild.build({

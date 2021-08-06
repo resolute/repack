@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { optimize, loadConfig } from 'svgo';
-import { Handler } from './types.js';
+import type { Handler } from './types.js';
 
 const svg: Handler = (/* repack */) => async (input) => {
   try {

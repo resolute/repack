@@ -1,11 +1,8 @@
-import path from 'path';
 import sane from 'sane';
-
 import { Stats } from 'fs';
-import { Repack, WatchOptions } from './types.js';
-
 import marko from './marko.js';
 import { debounceAndAggregate } from './util.js';
+import type { Repack, WatchOptions } from './types.js';
 
 // const unique = (val, index, arr) => arr.indexOf(val) === index;
 // const flatten = (acc, val) => acc.concat(val);
@@ -22,9 +19,11 @@ const watch = (repack: Repack, options: Partial<WatchOptions> = {}) => {
   const run = debounceAndAggregate(async (args: ([string, string, Stats?])[]) => {
     const invalidatedFiles: string[] = [];
     // eslint-disable-next-line no-restricted-syntax
-    for (const [relative, cwd] of args) {
+    for (const [relative] of args) {
+      // for (const [relative, cwd] of args) {
       if (/\.marko/.test(relative)) {
-        marko.delete(path.join(cwd, relative));
+        // marko.delete(path.join(cwd, relative));
+        marko.delete();
       } else if (/\.(?:svg|s?css)$/.test(relative)) {
         Object.keys(repack.all()).filter((filename) => /\.s?css$/.test(filename)).forEach((filename) => {
           invalidatedFiles.push(filename);

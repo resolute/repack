@@ -3,7 +3,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "newLine": "lf",
     "noEmitOnError": true,
@@ -29,5 +29,9 @@
     "**/*.d.ts",
     "**/*WIP*",
     "**/*OLD*"
-  ]
+  ],
+  "ts-node": {
+    "preferTsExts": true,
+    "transpileOnly": true 
+  }
 }

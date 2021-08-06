@@ -1,5 +1,3 @@
-// eslint-disable-next-line import/order
-import { Handler } from './types.js';
 import { dirname } from 'path';
 import { promisify } from 'util';
 
@@ -8,6 +6,7 @@ import postcss from 'postcss';
 import postcssSorting from 'postcss-sorting';
 import postcssCombineMediaQuery from 'postcss-combine-media-query';
 import sass from 'sass';
+import type { Handler } from './types.js';
 
 const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '"': '\'',

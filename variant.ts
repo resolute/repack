@@ -1,11 +1,9 @@
-/* eslint-disable import/first */
 /* eslint-disable max-classes-per-file */
-/* eslint-disable import/prefer-default-export */
 /* eslint-disable no-underscore-dangle */
 import { promises as fs } from 'fs';
 import path from 'path';
 import { open, xxhash, dimensions as getDimensions } from './util.js';
-import { RepackTypes } from './types.js';
+import type { RepackTypes } from './types.js';
 
 const {
   mkdir, writeFile, access, link: hardlink,

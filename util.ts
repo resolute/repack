@@ -1,12 +1,11 @@
-/* eslint-disable import/order */
 import { promises as fs } from 'fs';
-import { RepackTypes, Handler } from './types.js';
 
 import path from 'path';
 import got from 'got';
 import probe from 'probe-image-size';
 import XxHash from 'xxhash';
 import sharp from 'sharp';
+import type { RepackTypes, Handler } from './types.js';
 
 const { readFile } = fs;
 
@@ -73,6 +72,7 @@ export const open = async (url: string) => {
   let data: Promise<Buffer>;
   try {
     if (/^https?:/.test(url)) {
+      console.debug(`GOT: ${url}`);
       const { headers, body } = await got(url, { responseType: 'buffer', cache: gotCache });
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
@@ -141,25 +141,25 @@ export const doNothing: Handler = (/* repack */) => async (asset) => {
  * @param   function    fn          Function to be throttled
  * @param   number      threshold   Milliseconds fn will be throttled
  *
- * @return  function    Debounce'd function `fn`
+ * @return  function    Debounce’d function `fn`
  */
 
-export const debounceAndAggregate = <T extends (...args: any[]) => any>
-  (fn: T, threshold?: number) => {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  let aggregateArgs: Parameters<T>[0][0][] = [];
+export const debounceAndAggregate =
+  <T extends (...args: any[]) => any>(fn: T, threshold?: number) => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let aggregateArgs: Parameters<T>[0][0][] = [];
 
-  return (...args: Parameters<T>[0][0]) => {
-    aggregateArgs.push(args);
+    return (...args: Parameters<T>[0][0]) => {
+      aggregateArgs.push(args);
 
-    if (timeout) {
-      clearTimeout(timeout);
-    }
+      if (timeout) {
+        clearTimeout(timeout);
+      }
 
-    timeout = setTimeout(() => {
-      timeout = undefined;
-      fn.call(undefined, aggregateArgs);
-      aggregateArgs = [];
-    }, threshold);
+      timeout = setTimeout(() => {
+        timeout = undefined;
+        fn.call(undefined, aggregateArgs);
+        aggregateArgs = [];
+      }, threshold);
+    };
   };
-};

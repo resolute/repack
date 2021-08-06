@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-undef */
+
 import { promises as fs, createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';

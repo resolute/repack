@@ -1,8 +1,10 @@
-import { Asset, Variant } from './variant.js';
-// eslint-disable-next-line import/order
 import glob from 'fast-glob';
-
+import rio from '@resolute/rio';
+import { Asset, Variant } from './variant.js';
 import marko from './marko.js';
+
+export type ImageOptions = NonNullable<Parameters<ReturnType<typeof rio>>[1]>;
+export type ImageTypes = NonNullable<ImageOptions['type']>;
 
 export interface Database {
   [slug: string]: Promise<(Asset | Variant)>;
@@ -12,7 +14,7 @@ export interface WatchOptions {
   ignore: (string | RegExp)[];
 }
 
-export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'jpg' | 'png' | 'webp' | 'avif' | 'gif' | 'mp4' | 'woff2' | 'woff' | 'pdf';
+export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'mp4' | 'woff2' | 'woff' | 'pdf' | ImageTypes;
 
 export interface Repack {
   (source: string, variantOptions?: any): Promise<Variant>;
@@ -25,7 +27,7 @@ export interface Repack {
 }
 
 export interface Handler {
-  (repack: Repack): (asset: Asset, varientOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
+  (repack: Repack): (asset: Asset, variantOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
 }
 
 export type HandlerList = [RepackTypes[], Handler][];

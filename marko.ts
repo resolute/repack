@@ -1,48 +1,101 @@
-// eslint-disable-next-line import/order
-import { Repack } from './types';
+import fs from 'fs';
+import path from 'path';
+import { createRequire } from 'module';
+import Marko from 'marko';
+import FastGlob from 'fast-glob';
+import type { Repack } from './types';
 
-import fs = require('fs');
-import path = require('path');
-import Marko = require('marko');
-import markoHotReload = require('marko/hot-reload.js');
-
-markoHotReload.enable({ silent: true });
+const require = createRequire(import.meta.url);
 
 const defaultRewrite = (path: string) => path.replace(/^.*?tpl\//, 'web/html/').replace(/\.marko$/, '.html');
 
 const trimDirectoryPrefix = (str: string) =>
   str.replace(/^.*?tpl\//, '').replace(/^.*?web\/html\//, '');
 
+const markoComponentFiles = FastGlob('tpl/**/components/*.marko');
+const preloadComponentsWorkaround = async () => {
+  let iterations = 0;
+  const LIMIT = 10;
+  const load = (file: string) => {
+    try {
+      Marko.load(file);
+    } catch (error) {
+      return false;
+    }
+    return true;
+  };
+  const files = await markoComponentFiles;
+  const set = new Set([...files]);
+  while (set.size > 0) {
+    // let hadNoErrors = true as boolean;
+    // while (iterations === 0 || hadNoErrors === false) {
+    if (++iterations > LIMIT) {
+      throw new Error(`Marko component preloading workaround failed after trying to load ${[...set]} after ${iterations} times.`);
+    }
+    // let iterationErrors = false;
+    for (const file of set) {
+      const result = load(file);
+      if (result === false) {
+        console.debug(`${file} failed`);
+        // iterationErrors = true;
+        // eslint-disable-next-line no-use-before-define
+        marko.delete(file);
+      } else {
+        set.delete(file);
+      }
+      // if (result === true) {
+      //   set.delete(file);
+      // }
+    }
+    // if (iterationErrors === false) {
+    //   hadNoErrors = true;
+    // }
+  }
+};
+
 const marko = (repack: Repack) => {
   const marko = ({ rewrite = defaultRewrite } = {}) =>
     async (filename: string, config: any) => {
+      await preloadComponentsWorkaround();
       const outFile = rewrite(filename);
       console.debug(`… ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
-      const template = await import(path.join(process.cwd(), filename));
+      const template = Marko.load(filename);
       const dirname = path.dirname(outFile);
       await fs.promises.mkdir(dirname, { recursive: true });
       const data = { ...(await config), $global: { repack } };
-      await fs.promises.writeFile(outFile, (await template.default.render(data)).getOutput());
+      await fs.promises.writeFile(outFile, (await template.render(data)).getOutput());
       console.debug(`✓ ${trimDirectoryPrefix(filename)} → ${trimDirectoryPrefix(outFile)}`);
     };
-  marko.render = (markup: string, data: any) => {
+  marko.render = async (markup: string, data: any) => {
     if (!markup) {
       return undefined;
     }
-    return Marko
+    await preloadComponentsWorkaround();
+    const fauxTemplate = Marko
       .load(
         `${process.cwd()}/tpl/${data.uri || Math.random()}.marko`,
         markup,
         { buffer: true, writeToDisk: false },
-      )
-      .render({ ...data, $global: { repack, ...data.$global } })
-      .then((result) => result.getOutput());
+      );
+    const payload = { ...data, $global: { repack, ...data.$global } };
+    const renderedTemplate = await fauxTemplate.render(payload);
+    return renderedTemplate.getOutput();
   };
   return marko;
 };
 
-marko.delete = (filename) => {
-  markoHotReload.handleFileModified(filename, { silent: true });
+marko.delete = (filename?: string) => {
+  for (const file of Object.keys(require.cache)) {
+    // if (file.includes('.marko')) {
+    if (filename) {
+      if (file.includes(filename)) {
+        delete require.cache[file];
+        console.debug(`purge ${file}`);
+      }
+    } else {
+      delete require.cache[file];
+    }
+  }
 };
 
-export = marko;
+export default marko;
