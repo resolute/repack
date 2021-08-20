@@ -1,10 +1,9 @@
 {
   "recommendations": [
-    "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "stkb.rewrap",
     "pcanella.marko",
-    "buster.marko-beautify",
+    "marko-js.marko-vscode",
     "yzhang.markdown-all-in-one",
   ],
 }

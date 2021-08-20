@@ -72,7 +72,7 @@ export const open = async (url: string) => {
   let data: Promise<Buffer>;
   try {
     if (/^https?:/.test(url)) {
-      console.debug(`GOT: ${url}`);
+      // console.debug(`GOT: ${url}`);
       const { headers, body } = await got(url, { responseType: 'buffer', cache: gotCache });
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
@@ -92,6 +92,14 @@ export const open = async (url: string) => {
   return {
     data, hash, type, ...(await dimensions(await data, type)),
   };
+};
+
+export const getType = async (url: string) => {
+  if (/^https?:/.test(url)) {
+    const { headers } = await got.head(url);
+    return mimeToType(headers['content-type']);
+  }
+  return extMap(path.parse(url).ext.replace(/^\./, ''));
 };
 
 // export const stream = (url: string) => {

@@ -2,7 +2,9 @@
 /* eslint-disable no-underscore-dangle */
 import { promises as fs } from 'fs';
 import path from 'path';
-import { open, xxhash, dimensions as getDimensions } from './util.js';
+import {
+  open, xxhash, dimensions as getDimensions, getType,
+} from './util.js';
 import type { RepackTypes } from './types.js';
 
 const {
@@ -11,7 +13,7 @@ const {
 
 export class Asset {
   public source: string; // url or filename
-  public hash: string;
+  public hash?: string;
   public type?: RepackTypes;
   public width?: number;
   public height?: number;
@@ -61,13 +63,15 @@ export class Variant extends Asset {
   public variant: string;
   public destDir: string;
   public baseUri: string;
+  public hash: string;
   constructor({
     variant,
     destDir,
     baseUri,
     ...options
-  }: Omit<Variant, 'data' | 'uri' | 'toJSON' | 'localFilePath'> & { data?: Variant['data'] | Buffer }) {
+  }: Omit<Variant, 'data' | 'uri' | 'toJSON' | 'localFilePath'> & { data?: Variant['data'] | Buffer } & { hash: string }) {
     super(options);
+    this.hash = options.hash;
     this.variant = variant;
     this.destDir = destDir;
     this.baseUri = baseUri;
@@ -133,7 +137,8 @@ export const asset: AssetInitializer = async (input) => {
   if (isFromCache(input)) {
     return new Asset(input);
   }
-  return new Asset({ source: input.source, ...await open(input.source) });
+  // return new Asset({ source: input.source, ...await open(input.source) });
+  return new Asset({ source: input.source, type: await getType(input.source) });
 };
 
 export const variant: VariantFactory = (config) => async (input) => {

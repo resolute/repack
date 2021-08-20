@@ -27,29 +27,19 @@ const preloadComponentsWorkaround = async () => {
   const files = await markoComponentFiles;
   const set = new Set([...files]);
   while (set.size > 0) {
-    // let hadNoErrors = true as boolean;
-    // while (iterations === 0 || hadNoErrors === false) {
     if (++iterations > LIMIT) {
       throw new Error(`Marko component preloading workaround failed after trying to load ${[...set]} after ${iterations} times.`);
     }
-    // let iterationErrors = false;
     for (const file of set) {
       const result = load(file);
       if (result === false) {
-        console.debug(`${file} failed`);
-        // iterationErrors = true;
+        // console.debug(`${file} failed`);
         // eslint-disable-next-line no-use-before-define
         marko.delete(file);
       } else {
         set.delete(file);
       }
-      // if (result === true) {
-      //   set.delete(file);
-      // }
     }
-    // if (iterationErrors === false) {
-    //   hadNoErrors = true;
-    // }
   }
 };
 
@@ -86,11 +76,10 @@ const marko = (repack: Repack) => {
 
 marko.delete = (filename?: string) => {
   for (const file of Object.keys(require.cache)) {
-    // if (file.includes('.marko')) {
     if (filename) {
       if (file.includes(filename)) {
         delete require.cache[file];
-        console.debug(`purge ${file}`);
+        // console.debug(`purge ${file}`);
       }
     } else {
       delete require.cache[file];

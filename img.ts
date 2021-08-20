@@ -4,7 +4,8 @@ import type { Handler } from './types';
 const img: Handler = () => async (asset, options) => {
   const {
     width, height, type, buffer, hash, filename,
-  } = await rio()(asset.source, {
+    // @ts-ignore
+  } = await (rio.default ?? rio)()(asset.source, {
     ...options,
     type: options.type ?? options.format,
   });
