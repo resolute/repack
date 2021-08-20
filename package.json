@@ -40,7 +40,7 @@
     "htmlmin": "^0.0.7",
     "marko": "^5.15.1",
     "node-zopfli": "^2.1.4",
-    "p-map": "^5.1.0",
+    "p-map": "^4.0.0",
     "postcss": "^8.3.6",
     "postcss-combine-media-query": "^1.0.1",
     "postcss-sorting": "^6.0.0",
