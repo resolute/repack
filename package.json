@@ -3,10 +3,9 @@
   "version": "0.1.10",
   "description": "Static site generator with asset optimization and versioning.",
   "bin": {
-    "repack": "cli.sh",
+    "repack": "cli.js",
     "compress": "compress.js"
   },
-  "type": "module",
   "main": "./",
   "types": "./",
   "files": [
@@ -33,11 +32,11 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@resolute/rio": "^0.0.2",
+    "@resolute/rio": "file:../rio",
     "autoprefixer": "^10.3.1",
+    "axios": "^0.21.1",
     "esbuild": "^0.12.16",
     "fast-glob": "^3.2.7",
-    "got": "^12.0.0-beta.2",
     "htmlmin": "^0.0.7",
     "marko": "^5.15.1",
     "node-zopfli": "^2.1.4",
@@ -46,6 +45,7 @@
     "postcss-combine-media-query": "^1.0.1",
     "postcss-sorting": "^6.0.0",
     "probe-image-size": "^7.2.1",
+    "retry-axios": "^2.5.0",
     "sane": "^5.0.1",
     "sass": "^1.36.0",
     "sharp": "^0.29.0",

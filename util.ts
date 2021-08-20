@@ -1,15 +1,28 @@
 import { promises as fs } from 'fs';
 
 import path from 'path';
-import got from 'got';
+import axios from 'axios';
+import * as rax from 'retry-axios';
 import probe from 'probe-image-size';
 import XxHash from 'xxhash';
 import sharp from 'sharp';
 import type { RepackTypes, Handler } from './types.js';
 
 const { readFile } = fs;
+rax.attach();
 
-const gotCache = new Map();
+const cache: { [key: string]: Promise<{ headers: any, data: Buffer }> } = {};
+const download = async (url: string) => {
+  if (!(url in cache)) {
+    // console.debug(`GET ${url}`);
+    cache[url] = axios(url, { responseType: 'arraybuffer' })
+      .then((response) => ({
+        headers: response.headers,
+        data: Buffer.from(response.data),
+      }));
+  }
+  return cache[url];
+};
 
 export const xxhash = (data: Buffer) => {
   const buffer = typeof data === 'string' ? Buffer.from(data) : data;
@@ -72,8 +85,8 @@ export const open = async (url: string) => {
   let data: Promise<Buffer>;
   try {
     if (/^https?:/.test(url)) {
-      // console.debug(`GOT: ${url}`);
-      const { headers, body } = await got(url, { responseType: 'buffer', cache: gotCache });
+      // console.debug(`GET: ${url}`);
+      const { headers, data: body } = await download(url);
       type = mimeToType(headers['content-type']);
       data = Promise.resolve(body);
     } else {
@@ -94,9 +107,19 @@ export const open = async (url: string) => {
   };
 };
 
+const headCache: { [key: string]: Promise<{ [key: string]: string }> } = {};
+const head = async (url: string) => {
+  if (!(url in headCache)) {
+    // console.debug(`GET ${url}`);
+    headCache[url] = axios(url, { method: 'HEAD' })
+      .then((response) => response.headers);
+  }
+  return headCache[url];
+};
 export const getType = async (url: string) => {
   if (/^https?:/.test(url)) {
-    const { headers } = await got.head(url);
+    // const { headers } = await got.head(url);
+    const headers = await head(url);
     return mimeToType(headers['content-type']);
   }
   return extMap(path.parse(url).ext.replace(/^\./, ''));

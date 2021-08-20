@@ -1,6 +1,7 @@
 import { debuglog } from 'util';
 import path from 'path';
 import glob from 'fast-glob';
+import * as tsNode from 'ts-node';
 import type {
   Database, Repack, RepackOptions, RepackTypes,
 } from './types.js';
@@ -23,15 +24,15 @@ const debug = debuglog('repack');
 
 const database: Database = {};
 
-// // Node.js can require() `.ts` files
-// if (Object.keys(require.extensions).indexOf('.ts') === -1) {
-//   tsNode.register({
-//     project: `${process.cwd()}/tsconfig.json`,
-//     transpileOnly: true,
-//     compilerOptions: { module: 'esnext' },
-//     preferTsExts: true,
-//   });
-// }
+// Node.js can require() `.ts` files
+if (Object.keys(require.extensions).indexOf('.ts') === -1) {
+  tsNode.register({
+    project: `${process.cwd()}/tsconfig.json`,
+    transpileOnly: true,
+    compilerOptions: { module: 'commonjs' },
+    preferTsExts: true,
+  });
+}
 
 const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
   try {

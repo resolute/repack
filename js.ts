@@ -1,5 +1,5 @@
 import { minify } from 'terser';
-import esbuild from 'esbuild';
+import * as esbuild from 'esbuild';
 import type { Handler } from './types.js';
 
 const js: Handler = (/* repack */) => async ({ source: input }) => {
