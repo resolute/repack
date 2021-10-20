@@ -37,7 +37,6 @@
     "axios": "^0.21.1",
     "esbuild": "^0.12.16",
     "fast-glob": "^3.2.7",
-    "htmlmin": "^0.0.7",
     "marko": "^5.15.1",
     "node-zopfli": "^2.1.4",
     "p-map": "^4.0.0",
