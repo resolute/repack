@@ -4,7 +4,7 @@ import path from 'path';
 import axios from 'axios';
 import * as rax from 'retry-axios';
 import probe from 'probe-image-size';
-import XxHash from 'xxhash';
+import xxhash from 'xxhash-wasm';
 import sharp from 'sharp';
 import type { RepackTypes, Handler } from './types.js';
 
@@ -24,22 +24,53 @@ const download = async (url: string) => {
   return cache[url];
 };
 
-export const xxhash = (data: Buffer) => {
-  const buffer = typeof data === 'string' ? Buffer.from(data) : data;
-  if (!buffer || !buffer.length) {
-    throw new Error('empty/falsey data passed to be hashed');
+// copy-and-paste from @resolute/rio/util.ts
+export const bigIntToB64u = (bn: bigint) => {
+  let hex = bn.toString(16);
+  if (hex.length % 2) { hex = `0${hex}`; }
+
+  const bin: string[] = [];
+  let i = 0;
+  let d: number;
+  let b: string;
+  while (i < hex.length) {
+    d = parseInt(hex.slice(i, i + 2), 16);
+    b = String.fromCharCode(d);
+    bin.push(b);
+    i += 2;
   }
-  return (XxHash.hash64(buffer, 0, 'base64') as string)
-    // b64u:
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    // base64 character length:
-    //    4*(n/3) chars to represent n bytes
-    // and for a 8 byte integer, that would be 10.6667 chars,
-    // which we’ll truncate to 5 chars to avoid padding:
-    .slice(0, 5);
+
+  // // web version
+  // return btoa(bin.join(''))
+  //   .replace(/\+/g, '-')
+  //   .replace(/\//g, '_')
+  //   .replace(/=+$/, '');
+  // node version
+  return Buffer.from(bin.join(''), 'binary').toString('base64url').replace(/=+$/, '');
 };
+
+// copy-and-paste from @resolute/rio/util.ts
+export const b64uHash = async (input: Buffer) =>
+  bigIntToB64u((await xxhash()).h64Raw(input))
+    // except for this:
+    .slice(0, 5);
+
+// export const xxhash = (data: Buffer) => {
+//   const buffer = typeof data === 'string' ? Buffer.from(data) : data;
+//   if (!buffer || !buffer.length) {
+//     throw new Error('empty/falsey data passed to be hashed');
+//   }
+//   return (XxHash.hash64(buffer, 0, 'base64') as string)
+//     // b64u:
+//     .replace(/=/g, '')
+//     .replace(/\+/g, '-')
+//     .replace(/\//g, '_')
+//     // base64 character length:
+//     //    4*(n/3) chars to represent n bytes
+//     // and for a 8 byte integer, that would be 10.6667 chars,
+//     // which we’ll truncate to 5 chars to avoid padding:
+//     .slice(0, 5);
+// };
 
 export const mimeToType = (mime?: string) => {
   switch (mime) {
@@ -100,7 +131,7 @@ export const open = async (url: string) => {
     console.error(`FATAL: error trying to open “${url}”`);
     throw error;
   }
-  const hash = xxhash(await data);
+  const hash = await b64uHash(await data);
 
   return {
     data, hash, type, ...(await dimensions(await data, type)),

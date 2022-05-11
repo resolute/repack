@@ -1,5 +1,5 @@
 import { dirname } from 'path';
-import { promisify } from 'util';
+// import { promisify } from 'util';
 
 import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
@@ -20,46 +20,49 @@ const escape = (str: string) => str.replace(/["%&#{}<>|]/g, (i) => ({
   '|': '%7C',
 }[i])!);
 
-const sassRender = promisify(sass.render);
+// const sassRender = promisify(sass.render);
 
-const css: Handler = (repack) => async ({ source: file }) => sassRender({
+const css: Handler = (repack) => async ({ source: file }) => sass.compileAsync(
   file,
-  includePaths: [dirname(file)],
-  outputStyle: 'compressed',
-  functions: {
-    // TODO 'asset' helper function for SASS
-    'asset($file, $inline: "")': (rawFile: any, rawInline: any, done: any) => {
-      const file = rawFile.getValue();
-      const inline = rawInline.getValue();
-      if (inline !== '') {
-        // TODO handle base64 encoding, etc…
-      }
-      repack(file).then((version) => {
-        done(new sass.types.String(`url("${version.uri}")`));
-      });
-    },
-    'inline-svg($file, $fill:"")': (rawFile: any, rawFill: any, done: any) => {
-      const file = rawFile.getValue();
-      const fill = rawFill.getValue();
-      if (!file) {
-        throw new Error('No SVG file specified');
-      }
-      repack(file).then((version) => version.data).then((svg) => {
-        if (!svg /* || !(svg instanceof Version) */) {
-          throw new Error(`${file} not found in svg object.`);
+  {
+    loadPaths: [dirname(file)],
+    style: 'compressed',
+    functions: {
+      // TODO 'asset' helper function for SASS
+      'asset($file, $inline: "")': async (args: sass.Value[]) => {
+        const file = args[0].assertString('arg1').text;
+        const inline = args[1].assertString('arg2').text;
+        if (inline !== '') {
+          // TODO handle base64 encoding, etc…
         }
-        let data = svg.toString();
-        if (fill !== '') {
-          data = data.replace(/(['"])#[0-9A-Fa-f]{3,6}/g,
-            `$1#${fill.replace(/^#/, '')}`);
+        return repack(file).then((version) => new sass.SassString(`url("${version.uri}")`));
+      },
+      'inline-svg($file, $fill:"")': async (args: sass.Value[]) => {
+        const file = args[0].assertString('arg1').text;
+        const fill = args[1].assertString('arg2').text;
+        if (!file) {
+          throw new Error('No SVG file specified');
         }
-        done(new sass.types.String(`url("data:image/svg+xml,${escape(data)}")`));
-      }).catch((error) => {
-        console.error(error);
-      });
+        return repack(file).then((version) => version.data).then((svg) => {
+          if (!svg /* || !(svg instanceof Version) */) {
+            throw new Error(`${file} not found in svg object.`);
+          }
+          let data = svg.toString();
+          if (fill !== '') {
+            data = data.replace(
+              /(['"])#[0-9A-Fa-f]{3,6}/g,
+              `$1#${fill.replace(/^#/, '')}`,
+            );
+          }
+          return new sass.SassString(`url("data:image/svg+xml,${escape(data)}")`);
+        }).catch((error) => {
+          console.error(error);
+          throw error;
+        });
+      },
     },
   },
-})
+)
   // .catch(logError)
   .then(({ css }) =>
     // @ts-ignore

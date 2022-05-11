@@ -9,7 +9,7 @@ const svg: Handler = (/* repack */) => async (input) => {
 
     const config = fs.existsSync(path.join(process.cwd(), 'svg.config.js'))
       ? await loadConfig('svg.config.js', process.cwd()) : {};
-    const { data } = optimize(string, {
+    const result = optimize(string, {
       // datauri: 'unenc', // our regex escaping is better than encodeURIComponent()
       plugins: [
         'removeTitle',
@@ -20,6 +20,10 @@ const svg: Handler = (/* repack */) => async (input) => {
       ],
       ...config,
     });
+    if (!(('data' in result))) {
+      throw result.error;
+    }
+    const { data } = result;
     return Buffer.from(data);
   } catch (error) {
     process.emitWarning(`${input.source}: ${error}`);

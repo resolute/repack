@@ -3,7 +3,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import {
-  open, xxhash, dimensions as getDimensions, getType,
+  open, b64uHash, dimensions as getDimensions, getType,
 } from './util.js';
 import type { RepackTypes } from './types.js';
 
@@ -161,7 +161,7 @@ export const variant: VariantFactory = (config) => async (input) => {
   const data = Buffer.from(await input.data);
   let hash;
   try {
-    hash = xxhash(data);
+    hash = await b64uHash(data);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.debug('EMPTY DATA');

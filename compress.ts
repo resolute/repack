@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { promises as fs, createReadStream, createWriteStream } from 'fs';
-import { pipeline } from 'stream';
+import { pipeline, Writable } from 'stream';
 import { promisify } from 'util';
 import { cpus } from 'os';
 import {
@@ -11,7 +11,7 @@ import {
 import pMap from 'p-map';
 import zopfli from 'node-zopfli';
 import glob from 'fast-glob';
-import xxhash from 'xxhash';
+import xxhash from 'xxhash-wasm';
 
 const { stat, utimes, unlink } = fs;
 
@@ -26,11 +26,15 @@ const hasher = async (
   readStream: NodeJS.ReadableStream,
   ...rwStreams: NodeJS.ReadWriteStream[]
 ) => {
-  const hashStream = new xxhash.Stream(0) as NodeJS.WritableStream;
+  const hashStream = (await xxhash()).create64(); // as NodeJS.WritableStream;
   // @ts-ignore
-  await pipe(readStream, ...rwStreams, hashStream);
-  // @ts-ignore
-  return hashStream.read() as number;
+  await pipe(readStream, ...rwStreams, new Writable({
+    write: (data, _, done) => {
+      hashStream.update(data);
+      done();
+    },
+  }));
+  return hashStream.digest();
 };
 
 type Compression = typeof zopfli.createGzip | typeof createBrotliCompress;
@@ -42,7 +46,7 @@ const compress = async (
   output: string,
   mtime: Date,
   size: number,
-  hash: number,
+  hash: bigint,
 ) => {
   try {
     // await access(output, fs.constants.F_OK);
