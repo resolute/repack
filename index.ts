@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import { debuglog } from 'util';
 import path from 'path';
 import glob from 'fast-glob';
@@ -36,8 +37,6 @@ if (Object.keys(require.extensions).indexOf('.ts') === -1) {
 
 const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
   try {
-    // eslint-disable-next-line import/no-dynamic-require
-    // return await require(path.join(process.cwd(), 'etc/build'));
     return await import(path.join(process.cwd(), 'etc/build'));
   } catch (error) {
     process.emitWarning(`Using default config, because unable to load user config: ${error}`, 'BuildWarning');
@@ -90,42 +89,6 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
   ];
 
   const sourceGlob = glob(options.src);
-
-  // const read = async (file = options.jsonFile) => {
-  //   try {
-  //     const json = JSON.parse((await readFile(file)).toString()) as {
-  //       [slug: string]: Asset | Variant
-  //     };
-  //     for (const [slug, payload] of Object.entries(json)) {
-  //       if ('variant' in payload) {
-  //         database[slug] = variant({
-  //           baseUri: options.baseUri,
-  //           destDir: options.destDir,
-  //         })(payload);
-  //       } else {
-  //         database[slug] = asset(payload);
-  //       }
-  //     }
-  //   } catch {
-  //     // do nothing
-  //   }
-  // };
-
-  // const save = async (file = options.jsonFile) => {
-  //   // TODO sort
-  //   await writeFile(file, JSON.stringify(
-  //     await (async () => {
-  //       const result = {};
-  //       for (const [key, payload] of Object.entries(database)) {
-  //         // eslint-disable-next-line no-await-in-loop
-  //         result[key] = await payload;
-  //       }
-  //       return result;
-  //     })(),
-  //     null,
-  //     2,
-  //   ));
-  // };
 
   const repack: Repack = async (source: string, variantOptions = 'generic') => {
     debug(`repack('${source}', ${variantOptions})`);

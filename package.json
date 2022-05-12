@@ -32,7 +32,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@resolute/rio": "^0.0.4",
+    "@resolute/rio": "^0.0.5",
     "autoprefixer": "^10.4.7",
     "axios": "^0.27.2",
     "esbuild": "^0.14.38",
@@ -57,15 +57,18 @@
   "devDependencies": {
     "@types/marko": "*",
     "@types/node": "*",
+    "@types/probe-image-size": "^7.0.1",
     "@types/sane": "*",
     "@types/sass": "*",
+    "@types/sharp": "^0.30.2",
     "@types/svgo": "*",
-    "@typescript-eslint/eslint-plugin": "*",
-    "@typescript-eslint/parser": "*",
+    "@typescript-eslint/eslint-plugin": "^5.23.0",
+    "@typescript-eslint/parser": "^5.23.0",
     "del-cli": "*",
-    "eslint": "*",
-    "eslint-config-airbnb-base": "*",
-    "eslint-plugin-import": "*",
+    "eslint": "^8.15.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
     "np": "*",
     "prettier": "*"
   },

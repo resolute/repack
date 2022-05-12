@@ -25,52 +25,39 @@ const download = async (url: string) => {
 };
 
 // copy-and-paste from @resolute/rio/util.ts
-export const bigIntToB64u = (bn: bigint) => {
-  let hex = bn.toString(16);
-  if (hex.length % 2) { hex = `0${hex}`; }
+const internalBtoa = 'btoa' in globalThis ? globalThis.btoa :
+  ((input: string) =>
+    globalThis.Buffer.from(input, 'binary').toString('base64'));
 
-  const bin: string[] = [];
-  let i = 0;
-  let d: number;
-  let b: string;
-  while (i < hex.length) {
-    d = parseInt(hex.slice(i, i + 2), 16);
-    b = String.fromCharCode(d);
-    bin.push(b);
-    i += 2;
+const bigIntToString = (input: bigint) => {
+  let hex = input.toString(16);
+  if (hex.length % 2) {
+    hex = `0${hex}`;
   }
-
-  // // web version
-  // return btoa(bin.join(''))
-  //   .replace(/\+/g, '-')
-  //   .replace(/\//g, '_')
-  //   .replace(/=+$/, '');
-  // node version
-  return Buffer.from(bin.join(''), 'binary').toString('base64url').replace(/=+$/, '');
+  return new Array(hex.length / 2)
+    .fill(0)
+    .map((_, index) => hex.slice(index * 2, index * 2 + 2))
+    .map((d) => parseInt(d, 16))
+    .map((d) => String.fromCharCode(d))
+    .join('');
 };
 
-// copy-and-paste from @resolute/rio/util.ts
-export const b64uHash = async (input: Buffer) =>
-  bigIntToB64u((await xxhash()).h64Raw(input))
-    // except for this:
-    .slice(0, 5);
+export const hash = async (input: string | Uint8Array) =>
+  (await xxhash()).h64Raw(input as Uint8Array);
 
-// export const xxhash = (data: Buffer) => {
-//   const buffer = typeof data === 'string' ? Buffer.from(data) : data;
-//   if (!buffer || !buffer.length) {
-//     throw new Error('empty/falsey data passed to be hashed');
-//   }
-//   return (XxHash.hash64(buffer, 0, 'base64') as string)
-//     // b64u:
-//     .replace(/=/g, '')
-//     .replace(/\+/g, '-')
-//     .replace(/\//g, '_')
-//     // base64 character length:
-//     //    4*(n/3) chars to represent n bytes
-//     // and for a 8 byte integer, that would be 10.6667 chars,
-//     // which we’ll truncate to 5 chars to avoid padding:
-//     .slice(0, 5);
-// };
+export const hashB64u = async (input: string | Uint8Array, limit?: number) => {
+  const bigint = await hash(input);
+  const string = bigIntToString(bigint);
+  const b64 = internalBtoa(string);
+  const b64u = b64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  if (limit && limit > 0) {
+    return b64u.slice(0, limit);
+  }
+  return b64u;
+};
 
 export const mimeToType = (mime?: string) => {
   switch (mime) {
@@ -131,10 +118,12 @@ export const open = async (url: string) => {
     console.error(`FATAL: error trying to open “${url}”`);
     throw error;
   }
-  const hash = await b64uHash(await data);
 
   return {
-    data, hash, type, ...(await dimensions(await data, type)),
+    data,
+    hash: await hashB64u(await data),
+    type,
+    ...(await dimensions(await data, type)),
   };
 };
 

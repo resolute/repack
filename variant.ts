@@ -3,9 +3,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import {
-  open, b64uHash, dimensions as getDimensions, getType,
+  open, hashB64u, dimensions as getDimensions, getType,
 } from './util.js';
 import type { RepackTypes } from './types.js';
+
+const B64_HASH_LIMIT = 5;
 
 const {
   mkdir, writeFile, access, link: hardlink,
@@ -144,7 +146,7 @@ export const asset: AssetInitializer = async (input) => {
 export const variant: VariantFactory = (config) => async (input) => {
   if (isFromCache(input)) {
     if (typeof input.filename === 'string') {
-      const hash = input.hash.slice(0, 5);
+      const hash = input.hash.slice(0, B64_HASH_LIMIT);
       const result = new Variant({
         ...config, ...input, hash,
       });
@@ -159,9 +161,9 @@ export const variant: VariantFactory = (config) => async (input) => {
     return new Variant({ ...config, ...input });
   }
   const data = Buffer.from(await input.data);
-  let hash;
+  let hash: string;
   try {
-    hash = await b64uHash(data);
+    hash = await hashB64u(data, B64_HASH_LIMIT);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.debug('EMPTY DATA');

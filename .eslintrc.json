@@ -1,25 +1,24 @@
 {
   "env": {
-    "commonjs": true,
-    "es6": true,
     "node": true
   },
   "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "airbnb-typescript/base"
   ],
   "globals": {
     "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly",
-    "NodeJS": "readonly"
+    "SharedArrayBuffer": "readonly"
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2018
+    "project": "./tsconfig.json"
   },
   "plugins": [
     "@typescript-eslint"
   ],
   "rules": {
+    "@typescript-eslint/space-before-blocks": "off",
     "implicit-arrow-linebreak": "off",
     "import/no-unresolved": "off",
     "import/extensions": "off",
@@ -29,6 +28,7 @@
     "no-shadow": "off",
     "no-unused-vars": "off",
     "indent": "off",
+    "@typescript-eslint/lines-between-class-members": "off",
     "@typescript-eslint/indent": [
       "error",
       2
@@ -36,7 +36,6 @@
     "@typescript-eslint/no-unused-vars": [
       "error"
     ],
-    "operator-linebreak": "off",
     "no-restricted-syntax": [
       "error",
       {
@@ -50,6 +49,19 @@
       {
         "selector": "WithStatement",
         "message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize."
+      }
+    ],
+    "operator-linebreak": "off",
+    "spaced-comment": [
+      "error",
+      "always",
+      {
+        "line": {
+          "markers": [
+            "#region",
+            "#endregion"
+          ]
+        }
       }
     ]
   }
