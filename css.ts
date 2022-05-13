@@ -35,7 +35,7 @@ const css: Handler = (repack) => async ({ source: file }) => sass.compileAsync(
         if (inline !== '') {
           // TODO handle base64 encoding, etc…
         }
-        return repack(file).then((version) => new sass.SassString(`url("${version.uri}")`));
+        return repack(file).then((version) => new sass.SassString(`url("${version.uri}")`, { quotes: false }));
       },
       'inline-svg($file, $fill:"")': async (args: sass.Value[]) => {
         const file = args[0].assertString('arg1').text;
@@ -54,7 +54,7 @@ const css: Handler = (repack) => async ({ source: file }) => sass.compileAsync(
               `$1#${fill.replace(/^#/, '')}`,
             );
           }
-          return new sass.SassString(`url("data:image/svg+xml,${escape(data)}")`);
+          return new sass.SassString(`url("data:image/svg+xml,${escape(data)}")`, { quotes: false });
         }).catch((error) => {
           console.error(error);
           throw error;
