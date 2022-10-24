@@ -3,6 +3,7 @@ import rio from '@resolute/rio';
 import { Asset, Variant } from './variant.js';
 import marko from './marko.js';
 
+export type RioOptions = NonNullable<Parameters<typeof rio>[0]>;
 export type ImageOptions = NonNullable<Parameters<ReturnType<typeof rio>>[1]>;
 export type ImageTypes = NonNullable<ImageOptions['type']>;
 
@@ -18,7 +19,7 @@ export type RepackTypes = 'js' | 'ts' | 'scss' | 'svg' | 'css' | 'mp4' | 'woff2'
 
 export interface Repack {
   (source: string, variantOptions?: any): Promise<Variant>;
-  run: () => Promise<void>;
+  run: () => Promise<ReturnType<typeof rio>['stats']>;
   all: () => Database;
   delete: (filename: string) => Promise<void>;
   watch: () => void;
@@ -27,7 +28,7 @@ export interface Repack {
 }
 
 export interface Handler {
-  (repack: Repack): (asset: Asset, variantOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
+  (repack: Repack, handlerOptions?: any): (asset: Asset, variantOptions: any) => Promise<Buffer | (Pick<Variant, 'data'> & Partial<Pick<Variant, 'type' | 'hash' | 'width' | 'height'>>)>;
 }
 
 export type HandlerList = [RepackTypes[], Handler][];
@@ -50,5 +51,6 @@ export interface RepackOptions {
   baseUri: string;
   dev: boolean;
   watch: WatchOptions;
+  rio: RioOptions;
   run: (runtime: RunOptions) => Promise<void>;
 }

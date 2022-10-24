@@ -3,6 +3,7 @@ import { debuglog } from 'util';
 import path from 'path';
 import glob from 'fast-glob';
 import * as tsNode from 'ts-node';
+import rio from '@resolute/rio';
 import type {
   Database, Repack, RepackOptions, RepackTypes,
 } from './types.js';
@@ -45,10 +46,11 @@ const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
 })();
 
 const repack = async (commandOptions?: Partial<RepackOptions>) => {
+  const rioOptions = commandOptions?.rio ?? (await buildConfig).rio;
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
-      [['jpg', 'png', 'webp', 'gif', 'avif', 'heif', 'jpeg'], img],
+      [['jpg', 'png', 'webp', /* TODO: 'gif' ,*/ 'avif', 'heif', 'jpeg'], img(rioOptions)],
       [['svg'], svg],
       [['css'], css],
       [['js'], js],
@@ -58,6 +60,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
     destDir: 'web/s',
     baseUri: '/s',
     dev: false,
+    rio: {},
     run: async ({ glob, marko }: any) => {
       const configPath = path.join(process.cwd(), 'etc/config');
       let config;
@@ -174,15 +177,18 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
 
   repack.all = () => database;
 
-  repack.run = () => options.run({
-    svg: svg(repack),
-    js: js(repack),
-    css: css(repack),
-    img: img(repack),
-    marko: marko(repack),
-    glob,
-    repack,
-  });
+  repack.run = async () => {
+    await options.run({
+      svg: svg(repack),
+      js: js(repack),
+      css: css(repack),
+      img: img(options.rio)(repack),
+      marko: marko(repack),
+      glob,
+      repack,
+    });
+    return rio().stats;
+  };
 
   repack.watch = () => { watch(repack, options.watch); };
 

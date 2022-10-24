@@ -32,7 +32,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@resolute/rio": "^0.0.5",
+    "@resolute/rio": "^0.1.0",
     "autoprefixer": "^10.4.7",
     "axios": "^0.27.2",
     "esbuild": "^0.14.38",
@@ -51,12 +51,12 @@
     "svgo": "^2.8.0",
     "terser": "^5.13.1",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.4",
+    "typescript": "^4.8.4",
     "xxhash-wasm": "^1.0.1"
   },
   "devDependencies": {
     "@types/marko": "*",
-    "@types/node": "*",
+    "@types/node": "^18.8.5",
     "@types/probe-image-size": "^7.0.1",
     "@types/sane": "*",
     "@types/sass": "*",
