@@ -1,8 +1,7 @@
 import rio from '@resolute/rio';
-import { RioConfig } from '@resolute/rio/types';
-import type { Handler } from './types';
+import type { Handler, RioOptions } from './types';
 
-const img = (rioOptions?: Partial<RioConfig>): Handler => () => async (asset, options) => {
+const img = (rioOptions?: Partial<RioOptions>): Handler => () => async (asset, options) => {
   const {
     width, height, type, buffer, hash, filename,
     // @ts-ignore
