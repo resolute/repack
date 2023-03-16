@@ -12,16 +12,23 @@ const svg: Handler = (/* repack */) => async (input) => {
     const result = optimize(string, {
       // datauri: 'unenc', // our regex escaping is better than encodeURIComponent()
       plugins: [
+        {
+          name: 'preset-default',
+          params: {
+            overrides: {
+              cleanupIds: false,
+              convertTransform: false,
+            },
+          },
+        },
         'removeTitle',
         'sortAttrs',
         'removeDimensions',
-        { name: 'cleanupIDs', active: false },
-        { name: 'convertTransform', active: false },
       ],
       ...config,
     });
     if (!(('data' in result))) {
-      throw result.error;
+      throw new Error((result as any).error ?? result);
     }
     const { data } = result;
     return Buffer.from(data);

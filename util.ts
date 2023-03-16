@@ -127,12 +127,13 @@ export const open = async (url: string) => {
   };
 };
 
-const headCache: { [key: string]: Promise<{ [key: string]: string }> } = {};
+const headCache: { [key: string]: Promise<Record<string, string>> } = {};
 const head = async (url: string) => {
   if (!(url in headCache)) {
     // console.debug(`GET ${url}`);
+    // @ts-ignore
     headCache[url] = axios(url, { method: 'HEAD' })
-      .then((response) => response.headers);
+      .then((response) => ({ ...response.headers }));
   }
   return headCache[url];
 };

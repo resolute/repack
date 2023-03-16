@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import { dirname } from 'path';
 // import { promisify } from 'util';
 

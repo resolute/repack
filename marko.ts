@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import fs from 'fs';
 import path from 'path';
 // import { createRequire } from 'module';
+// @ts-ignore
 import Marko from 'marko';
 import 'marko/node-require';
 // import FastGlob from 'fast-glob';

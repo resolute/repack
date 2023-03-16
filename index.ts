@@ -47,27 +47,25 @@ const buildConfig: Promise<Partial<RepackOptions>> = (async () => {
 
 const repack = async (commandOptions?: Partial<RepackOptions>) => {
   const rioOptions = commandOptions?.rio ?? (await buildConfig).rio;
+  const jsOptions = commandOptions?.js ?? (await buildConfig).js;
   const options: RepackOptions = {
     jsonFile: 'etc/assets.json',
     handlers: [
       [['jpg', 'png', 'webp', /* TODO: 'gif' ,*/ 'avif', 'heif', 'jpeg'], img(rioOptions)],
       [['svg'], svg],
       [['css'], css],
-      [['js'], js],
+      [['js'], js(jsOptions)],
       [['woff2', 'woff', 'pdf', 'mp4'], doNothing],
     ],
     src: ['**/*', '!**/node_modules'],
     destDir: 'web/s',
     baseUri: '/s',
     dev: false,
-    rio: {},
     run: async ({ glob, marko }: any) => {
       const configPath = path.join(process.cwd(), 'etc/config');
       let config;
       try {
-        // config = await import(`${configPath}`);
-        // eslint-disable-next-line import/no-dynamic-require
-        // config = await require(`${configPath}`);
+        delete require.cache[require.resolve(`${configPath}`)];
         config = await import(`${configPath}`);
       } catch (error) {
         process.emitWarning(`Unable to read “etc/config.(j|t)s”. ${error} Continuing…`);
@@ -180,7 +178,7 @@ const repack = async (commandOptions?: Partial<RepackOptions>) => {
   repack.run = async () => {
     await options.run({
       svg: svg(repack),
-      js: js(repack),
+      js: js(options.js)(repack),
       css: css(repack),
       img: img(options.rio)(repack),
       marko: marko(repack),

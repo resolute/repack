@@ -2,6 +2,7 @@ import glob from 'fast-glob';
 import rio from '@resolute/rio';
 import { Asset, Variant } from './variant.js';
 import marko from './marko.js';
+import { JsOptions } from './js.js';
 
 // export type RioOptions = NonNullable<Parameters<typeof rio>[0]>;
 // export type ImageOptions = NonNullable<Parameters<ReturnType<typeof rio>>[1]>;
@@ -125,6 +126,7 @@ export interface RepackOptions {
   baseUri: string;
   dev: boolean;
   watch: WatchOptions;
-  rio: Partial<RioOptions>;
+  rio?: Partial<RioOptions>;
+  js?: Partial<JsOptions>;
   run: (runtime: RunOptions) => Promise<void>;
 }
